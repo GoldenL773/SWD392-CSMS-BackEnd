@@ -1,5 +1,7 @@
 package fu.se.swd392csms.dto.request;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,8 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 /**
  * Ingredient Request DTO
@@ -29,8 +29,12 @@ public class IngredientRequest {
     @NotNull(message = "Quantity is required")
     @DecimalMin(value = "0.0", message = "Quantity must be non-negative")
     private BigDecimal quantity;
-    
+
     @NotNull(message = "Minimum stock is required")
     @DecimalMin(value = "0.0", message = "Minimum stock must be non-negative")
     private BigDecimal minimumStock;
+
+    @NotNull(message = "Price per unit is required")
+    @DecimalMin(value = "0.0", message = "Price per unit must be non-negative")
+    private BigDecimal pricePerUnit;
 }

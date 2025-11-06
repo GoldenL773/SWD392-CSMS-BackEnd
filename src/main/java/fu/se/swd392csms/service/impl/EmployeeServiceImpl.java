@@ -54,8 +54,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
+        // Validate username is provided
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new BadRequestException("Username is required");
+        }
+        
+        // Validate password is provided
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new BadRequestException("Password is required");
+        }
+        
         // Validate username is unique
-        if (request.getUsername() != null && userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new BadRequestException("Username already exists");
         }
         
@@ -342,6 +352,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         return EmployeeResponse.builder()
                 .id(employee.getId())
                 .fullName(employee.getFullName())
+                .dob(employee.getDob())
+                .gender(employee.getGender())
                 .position(employee.getPosition())
                 .phone(employee.getPhone())
                 .email(employee.getEmail())

@@ -34,7 +34,7 @@ public class OrderController {
      * Get all orders with optional filtering and pagination
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF')")
     @Operation(summary = "Get all orders", description = "Get all orders with optional status filter and pagination")
     public ResponseEntity<Page<OrderResponse>> getAllOrders(
             @RequestParam(required = false) String status,
@@ -55,7 +55,7 @@ public class OrderController {
      * Get order by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF')")
     @Operation(summary = "Get order by ID", description = "Get a specific order by its ID")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         OrderResponse order = orderService.getOrderById(id);
@@ -66,7 +66,7 @@ public class OrderController {
      * Create new order
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF')")
     @Operation(summary = "Create new order", description = "Create a new order with items")
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         OrderResponse order = orderService.createOrder(request);
@@ -77,7 +77,7 @@ public class OrderController {
      * Update order status
      */
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Update order status", description = "Update the status of an existing order")
     public ResponseEntity<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
@@ -90,7 +90,7 @@ public class OrderController {
      * Delete order
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Delete order", description = "Delete an order by ID")
     public ResponseEntity<MessageResponse> deleteOrder(@PathVariable Long id) {
         MessageResponse response = orderService.deleteOrder(id);

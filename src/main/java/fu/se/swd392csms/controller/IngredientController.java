@@ -37,7 +37,7 @@ public class IngredientController {
      * Get all ingredients with optional search and pagination
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF')")
     @Operation(summary = "Get all ingredients", description = "Get all ingredients with optional search and pagination")
     public ResponseEntity<Page<IngredientResponse>> getAllIngredients(
             @RequestParam(required = false) String search,
@@ -58,7 +58,7 @@ public class IngredientController {
      * Get ingredient by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF')")
     @Operation(summary = "Get ingredient by ID", description = "Get a specific ingredient by its ID")
     public ResponseEntity<IngredientResponse> getIngredientById(@PathVariable Long id) {
         IngredientResponse ingredient = ingredientService.getIngredientById(id);
@@ -69,7 +69,7 @@ public class IngredientController {
      * Create new ingredient
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Create new ingredient", description = "Create a new ingredient")
     public ResponseEntity<IngredientResponse> createIngredient(@Valid @RequestBody IngredientRequest request) {
         IngredientResponse ingredient = ingredientService.createIngredient(request);
@@ -80,7 +80,7 @@ public class IngredientController {
      * Update ingredient
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Update ingredient", description = "Update an existing ingredient")
     public ResponseEntity<IngredientResponse> updateIngredient(
             @PathVariable Long id,
@@ -93,7 +93,7 @@ public class IngredientController {
      * Delete ingredient
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Delete ingredient", description = "Delete an ingredient by ID")
     public ResponseEntity<MessageResponse> deleteIngredient(@PathVariable Long id) {
         MessageResponse response = ingredientService.deleteIngredient(id);
@@ -104,7 +104,7 @@ public class IngredientController {
      * Record ingredient transaction
      */
     @PostMapping("/transactions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Record transaction", description = "Record ingredient import/export transaction")
     public ResponseEntity<IngredientTransactionResponse> recordTransaction(
             @Valid @RequestBody IngredientTransactionRequest request) {
@@ -116,7 +116,7 @@ public class IngredientController {
      * Get ingredient transactions
      */
     @GetMapping("/transactions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get transactions", description = "Get ingredient transactions with optional filters")
     public ResponseEntity<Page<IngredientTransactionResponse>> getTransactions(
             @RequestParam(required = false) Long ingredientId,
@@ -134,7 +134,7 @@ public class IngredientController {
      * Get low stock ingredients
      */
     @GetMapping("/low-stock")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get low stock ingredients", description = "Get ingredients below minimum stock level")
     public ResponseEntity<List<IngredientResponse>> getLowStockIngredients() {
         List<IngredientResponse> lowStockIngredients = ingredientService.getLowStockIngredients();

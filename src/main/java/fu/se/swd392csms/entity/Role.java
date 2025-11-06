@@ -5,7 +5,7 @@ import lombok.*;
 
 /**
  * Role Entity
- * Represents user roles in the system (ROLE_ADMIN, ROLE_MANAGER, ROLE_STAFF)
+ * Represents user roles in the system (ROLE_ADMIN, ROLE_MANAGER, ROLE_STAFF, ROLE_FINANCE)
  */
 @Entity
 @Table(name = "roles")
@@ -20,5 +20,5 @@ public class Role {
     private Integer id;
     
     @Column(nullable = false, unique = true, length = 20)
-    private String name; // ROLE_ADMIN, ROLE_MANAGER, ROLE_STAFF
+    private String name; // ROLE_ADMIN, ROLE_MANAGER, ROLE_STAFF, ROLE_FINANCE
 }

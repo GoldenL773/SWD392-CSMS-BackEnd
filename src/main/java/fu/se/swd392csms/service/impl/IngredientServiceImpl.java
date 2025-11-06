@@ -1,5 +1,16 @@
 package fu.se.swd392csms.service.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import fu.se.swd392csms.dto.request.IngredientRequest;
 import fu.se.swd392csms.dto.request.IngredientTransactionRequest;
 import fu.se.swd392csms.dto.response.IngredientResponse;
@@ -15,15 +26,6 @@ import fu.se.swd392csms.repository.IngredientRepository;
 import fu.se.swd392csms.repository.IngredientTransactionRepository;
 import fu.se.swd392csms.service.IngredientService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Ingredient Service Implementation
@@ -55,7 +57,8 @@ public class IngredientServiceImpl implements IngredientService {
         ingredient.setUnit(request.getUnit());
         ingredient.setQuantity(request.getQuantity());
         ingredient.setMinimumStock(request.getMinimumStock());
-        
+        ingredient.setPricePerUnit(request.getPricePerUnit());
+
         Ingredient savedIngredient = ingredientRepository.save(ingredient);
         
         return convertToIngredientResponse(savedIngredient);
@@ -118,7 +121,8 @@ public class IngredientServiceImpl implements IngredientService {
         ingredient.setUnit(request.getUnit());
         ingredient.setQuantity(request.getQuantity());
         ingredient.setMinimumStock(request.getMinimumStock());
-        
+        ingredient.setPricePerUnit(request.getPricePerUnit());
+
         Ingredient updatedIngredient = ingredientRepository.save(ingredient);
         
         return convertToIngredientResponse(updatedIngredient);
@@ -246,13 +250,14 @@ public class IngredientServiceImpl implements IngredientService {
      */
     private IngredientResponse convertToIngredientResponse(Ingredient ingredient) {
         boolean isLowStock = ingredient.getQuantity().compareTo(ingredient.getMinimumStock()) < 0;
-        
+
         return IngredientResponse.builder()
                 .id(ingredient.getId())
                 .name(ingredient.getName())
                 .unit(ingredient.getUnit())
                 .quantity(ingredient.getQuantity())
                 .minimumStock(ingredient.getMinimumStock())
+                .pricePerUnit(ingredient.getPricePerUnit() != null ? ingredient.getPricePerUnit() : BigDecimal.ZERO)
                 .isLowStock(isLowStock)
                 .build();
     }

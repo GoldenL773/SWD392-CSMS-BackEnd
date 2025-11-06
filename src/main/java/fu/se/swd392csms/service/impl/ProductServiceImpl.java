@@ -3,17 +3,25 @@ package fu.se.swd392csms.service.impl;
 import fu.se.swd392csms.dto.request.ProductRequest;
 import fu.se.swd392csms.dto.response.MessageResponse;
 import fu.se.swd392csms.dto.response.ProductResponse;
+import fu.se.swd392csms.entity.Ingredient;
 import fu.se.swd392csms.entity.Product;
+import fu.se.swd392csms.entity.ProductIngredient;
 import fu.se.swd392csms.exception.BadRequestException;
 import fu.se.swd392csms.exception.ResourceNotFoundException;
+import fu.se.swd392csms.repository.IngredientRepository;
+import fu.se.swd392csms.repository.ProductIngredientRepository;
 import fu.se.swd392csms.repository.ProductRepository;
 import fu.se.swd392csms.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.Predicate;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +34,12 @@ public class ProductServiceImpl implements ProductService {
     
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private ProductIngredientRepository productIngredientRepository;
+    
+    @Autowired
+    private IngredientRepository ingredientRepository;
     
     @Override
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
@@ -78,6 +92,23 @@ public class ProductServiceImpl implements ProductService {
                 .build();
         
         Product savedProduct = productRepository.save(product);
+        
+        // Save product ingredients if provided
+        if (request.getProductIngredients() != null && !request.getProductIngredients().isEmpty()) {
+            for (ProductRequest.ProductIngredientRequest piRequest : request.getProductIngredients()) {
+                Ingredient ingredient = ingredientRepository.findById(piRequest.getIngredientId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Ingredient", "id", piRequest.getIngredientId()));
+                
+                ProductIngredient productIngredient = ProductIngredient.builder()
+                        .product(savedProduct)
+                        .ingredient(ingredient)
+                        .quantityRequired(BigDecimal.valueOf(piRequest.getQuantityRequired()))
+                        .build();
+                
+                productIngredientRepository.save(productIngredient);
+            }
+        }
+        
         return convertToResponse(savedProduct);
     }
     
@@ -101,6 +132,27 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(request.getDescription());
         
         Product updatedProduct = productRepository.save(product);
+        
+        // Update product ingredients
+        if (request.getProductIngredients() != null) {
+            // Delete existing product ingredients
+            productIngredientRepository.deleteByProductId(id);
+            
+            // Add new product ingredients
+            for (ProductRequest.ProductIngredientRequest piRequest : request.getProductIngredients()) {
+                Ingredient ingredient = ingredientRepository.findById(piRequest.getIngredientId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Ingredient", "id", piRequest.getIngredientId()));
+                
+                ProductIngredient productIngredient = ProductIngredient.builder()
+                        .product(updatedProduct)
+                        .ingredient(ingredient)
+                        .quantityRequired(BigDecimal.valueOf(piRequest.getQuantityRequired()))
+                        .build();
+                
+                productIngredientRepository.save(productIngredient);
+            }
+        }
+        
         return convertToResponse(updatedProduct);
     }
     
@@ -123,58 +175,38 @@ public class ProductServiceImpl implements ProductService {
     
     @Override
     public Page<ProductResponse> searchAndFilterProducts(String category, String status, String searchTerm, Pageable pageable) {
-        // If search term is provided, use search
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            return productRepository.searchByName(searchTerm).stream()
-                    .filter(p -> (category == null || category.isEmpty() || p.getCategory().equalsIgnoreCase(category)))
-                    .filter(p -> (status == null || status.isEmpty() || p.getStatus().equalsIgnoreCase(status)))
-                    .skip(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .map(this::convertToResponse)
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toList(),
-                            list -> new org.springframework.data.domain.PageImpl<>(list, pageable, list.size())
-                    ));
-        }
+        Specification<Product> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            
+            // Filter by category
+            if (category != null && !category.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(
+                    criteriaBuilder.lower(root.get("category")), 
+                    category.toLowerCase()
+                ));
+            }
+            
+            // Filter by status
+            if (status != null && !status.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(
+                    criteriaBuilder.lower(root.get("status")), 
+                    status.toLowerCase()
+                ));
+            }
+            
+            // Search by name
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("name")),
+                    "%" + searchTerm.toLowerCase() + "%"
+                ));
+            }
+            
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
         
-        // Filter by category and status
-        if (category != null && !category.isEmpty() && status != null && !status.isEmpty()) {
-            return productRepository.findByCategoryAndStatus(category, status).stream()
-                    .skip(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .map(this::convertToResponse)
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toList(),
-                            list -> new org.springframework.data.domain.PageImpl<>(list, pageable, list.size())
-                    ));
-        }
-        
-        // Filter by category only
-        if (category != null && !category.isEmpty()) {
-            return productRepository.findByCategory(category).stream()
-                    .skip(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .map(this::convertToResponse)
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toList(),
-                            list -> new org.springframework.data.domain.PageImpl<>(list, pageable, list.size())
-                    ));
-        }
-        
-        // Filter by status only
-        if (status != null && !status.isEmpty()) {
-            return productRepository.findByStatus(status).stream()
-                    .skip(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .map(this::convertToResponse)
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toList(),
-                            list -> new org.springframework.data.domain.PageImpl<>(list, pageable, list.size())
-                    ));
-        }
-        
-        // No filters, return all with pagination
-        return getAllProducts(pageable);
+        return productRepository.findAll(spec, pageable)
+                .map(this::convertToResponse);
     }
     
     /**

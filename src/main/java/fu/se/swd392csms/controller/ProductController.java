@@ -72,7 +72,7 @@ public class ProductController {
      * Create new product
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Create product", description = "Create a new product")
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         ProductResponse product = productService.createProduct(request);
@@ -83,7 +83,7 @@ public class ProductController {
      * Update product
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Update product", description = "Update existing product")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
@@ -96,7 +96,7 @@ public class ProductController {
      * Delete product
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Delete product", description = "Delete a product")
     public ResponseEntity<MessageResponse> deleteProduct(@PathVariable Long id) {
         MessageResponse response = productService.deleteProduct(id);

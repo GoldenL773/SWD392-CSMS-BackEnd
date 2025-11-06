@@ -50,6 +50,13 @@ public class Swd392CsmsApplication {
                         return roleRepository.save(role);
                     });
 
+            Role financeRole = roleRepository.findByName("FINANCE")
+                    .orElseGet(() -> {
+                        Role role = new Role();
+                        role.setName("FINANCE");
+                        return roleRepository.save(role);
+                    });
+
             // Create admin user if doesn't exist
             if (!userRepository.existsByUsername("admin")) {
                 User admin = new User();

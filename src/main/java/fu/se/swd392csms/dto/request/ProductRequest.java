@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Product Request DTO
@@ -32,4 +33,14 @@ public class ProductRequest {
     private String status; // Available, Unavailable
     
     private String description;
+    
+    private List<ProductIngredientRequest> productIngredients;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProductIngredientRequest {
+        private Long ingredientId;
+        private Double quantityRequired;
+    }
 }

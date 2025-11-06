@@ -40,7 +40,7 @@ public class EmployeeController {
      * Get all employees with optional filtering and pagination
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get all employees", description = "Get all employees with optional status filter and pagination")
     public ResponseEntity<Page<EmployeeResponse>> getAllEmployees(
             @RequestParam(required = false) String status,
@@ -61,7 +61,7 @@ public class EmployeeController {
      * Get employee by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get employee by ID", description = "Get a specific employee by their ID")
     public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable Long id) {
         EmployeeResponse employee = employeeService.getEmployeeById(id);
@@ -72,7 +72,7 @@ public class EmployeeController {
      * Create new employee
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Create new employee", description = "Create a new employee with user account")
     public ResponseEntity<EmployeeResponse> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         EmployeeResponse employee = employeeService.createEmployee(request);
@@ -83,7 +83,7 @@ public class EmployeeController {
      * Update employee
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Update employee", description = "Update an existing employee")
     public ResponseEntity<EmployeeResponse> updateEmployee(
             @PathVariable Long id,
@@ -96,7 +96,7 @@ public class EmployeeController {
      * Delete employee
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Delete employee", description = "Delete an employee by ID")
     public ResponseEntity<MessageResponse> deleteEmployee(@PathVariable Long id) {
         MessageResponse response = employeeService.deleteEmployee(id);
@@ -107,7 +107,7 @@ public class EmployeeController {
      * Get employee attendance records
      */
     @GetMapping("/{id}/attendance")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get employee attendance", description = "Get attendance records for a specific employee")
     public ResponseEntity<Page<AttendanceResponse>> getEmployeeAttendance(
             @PathVariable Long id,
@@ -125,7 +125,7 @@ public class EmployeeController {
      * Add attendance record
      */
     @PostMapping("/attendance")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Add attendance record", description = "Record employee attendance")
     public ResponseEntity<AttendanceResponse> addAttendance(@Valid @RequestBody AttendanceRequest request) {
         AttendanceResponse attendance = employeeService.addAttendance(request);
@@ -136,7 +136,7 @@ public class EmployeeController {
      * Get employee salary records
      */
     @GetMapping("/{id}/salary")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get employee salary", description = "Get salary records for a specific employee")
     public ResponseEntity<Page<SalaryResponse>> getEmployeeSalary(
             @PathVariable Long id,
@@ -154,7 +154,7 @@ public class EmployeeController {
      * Add salary record
      */
     @PostMapping("/salary")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Add salary record", description = "Add salary record for an employee")
     public ResponseEntity<SalaryResponse> addSalary(@Valid @RequestBody SalaryRequest request) {
         SalaryResponse salary = employeeService.addSalary(request);

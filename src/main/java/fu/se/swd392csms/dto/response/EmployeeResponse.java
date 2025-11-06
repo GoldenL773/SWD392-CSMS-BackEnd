@@ -20,6 +20,8 @@ public class EmployeeResponse {
     
     private Long id;
     private String fullName;
+    private LocalDate dob;
+    private String gender;
     private String position;
     private String phone;
     private String email;

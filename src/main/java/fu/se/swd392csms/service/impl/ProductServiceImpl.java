@@ -213,6 +213,18 @@ public class ProductServiceImpl implements ProductService {
      * Convert Product entity to ProductResponse DTO
      */
     private ProductResponse convertToResponse(Product product) {
+        // Fetch product ingredients
+        List<ProductIngredient> productIngredients = productIngredientRepository.findByProductIdWithIngredient(product.getId());
+        
+        List<ProductResponse.ProductIngredientInfo> ingredients = productIngredients.stream()
+                .map(pi -> ProductResponse.ProductIngredientInfo.builder()
+                        .ingredientId(pi.getIngredient().getId())
+                        .ingredientName(pi.getIngredient().getName())
+                        .quantityRequired(pi.getQuantityRequired())
+                        .unit(pi.getIngredient().getUnit())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+        
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -220,6 +232,7 @@ public class ProductServiceImpl implements ProductService {
                 .price(product.getPrice())
                 .status(product.getStatus())
                 .description(product.getDescription())
+                .ingredients(ingredients)
                 .build();
     }
 }

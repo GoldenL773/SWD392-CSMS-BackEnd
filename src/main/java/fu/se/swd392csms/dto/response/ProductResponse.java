@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Product Response DTO
@@ -23,4 +24,16 @@ public class ProductResponse {
     private BigDecimal price;
     private String status;
     private String description;
+    private List<ProductIngredientInfo> ingredients;
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProductIngredientInfo {
+        private Long ingredientId;
+        private String ingredientName;
+        private BigDecimal quantityRequired;
+        private String unit;
+    }
 }

@@ -78,4 +78,20 @@ public interface SalaryRepository extends JpaRepository<Salary, Long> {
      */
     @Query("SELECT SUM(s.totalSalary) FROM Salary s WHERE s.month = :month AND s.year = :year AND s.status = 'Paid'")
     Double getTotalSalaryPaid(Integer month, Integer year);
+    
+    /**
+     * Find all paid salaries
+     * @return List of paid salary records
+     */
+    @Query("SELECT s FROM Salary s WHERE s.status = 'Paid' ORDER BY s.year DESC, s.month DESC")
+    List<Salary> findAllPaidSalaries();
+    
+    /**
+     * Find paid salaries by month and year
+     * @param month Month
+     * @param year Year
+     * @return List of paid salary records
+     */
+    @Query("SELECT s FROM Salary s WHERE s.month = :month AND s.year = :year AND s.status = 'Paid'")
+    List<Salary> findPaidSalariesByMonthAndYear(Integer month, Integer year);
 }

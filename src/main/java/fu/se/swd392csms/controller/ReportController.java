@@ -2,6 +2,12 @@ package fu.se.swd392csms.controller;
 
 import fu.se.swd392csms.dto.response.DailyReportResponse;
 import fu.se.swd392csms.repository.OrderRepository;
+import fu.se.swd392csms.repository.OrderItemRepository;
+import fu.se.swd392csms.repository.ProductIngredientRepository;
+import fu.se.swd392csms.repository.SalaryRepository;
+import fu.se.swd392csms.entity.Order;
+import fu.se.swd392csms.entity.OrderItem;
+import fu.se.swd392csms.entity.ProductIngredient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +34,9 @@ import java.util.List;
 public class ReportController {
     
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ProductIngredientRepository productIngredientRepository;
+    private final SalaryRepository salaryRepository;
     
     /**
      * Get daily reports with optional date range filter
@@ -66,14 +75,23 @@ public class ReportController {
                     .map(o -> o.getTotalAmount())
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
+            // Calculate ingredient cost for completed orders
+            BigDecimal ingredientCost = calculateIngredientCost(orders);
+            
+            // Calculate salary cost for this day (prorated daily salary)
+            BigDecimal salaryCost = calculateDailySalaryCost(currentDate);
+            
+            BigDecimal totalCost = ingredientCost.add(salaryCost);
+            BigDecimal profit = totalRevenue.subtract(totalCost);
+            
             DailyReportResponse report = DailyReportResponse.builder()
                     .reportDate(currentDate)
                     .totalOrders(totalOrders)
                     .completedOrders(completedOrders)
                     .cancelledOrders(cancelledOrders)
                     .totalRevenue(totalRevenue)
-                    .totalCost(BigDecimal.ZERO) // TODO: Calculate from ingredients
-                    .profit(totalRevenue) // TODO: revenue - cost
+                    .totalCost(totalCost)
+                    .profit(profit)
                     .build();
             
             reports.add(report);
@@ -106,16 +124,76 @@ public class ReportController {
                 .map(o -> o.getTotalAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
+        // Calculate ingredient cost for completed orders
+        BigDecimal ingredientCost = calculateIngredientCost(orders);
+        
+        // Calculate salary cost for this day (prorated daily salary)
+        BigDecimal salaryCost = calculateDailySalaryCost(date);
+        
+        BigDecimal totalCost = ingredientCost.add(salaryCost);
+        BigDecimal profit = totalRevenue.subtract(totalCost);
+        
         DailyReportResponse report = DailyReportResponse.builder()
                 .reportDate(date)
                 .totalOrders(totalOrders)
                 .completedOrders(completedOrders)
                 .cancelledOrders(cancelledOrders)
                 .totalRevenue(totalRevenue)
-                .totalCost(BigDecimal.ZERO)
-                .profit(totalRevenue)
+                .totalCost(totalCost)
+                .profit(profit)
                 .build();
         
         return ResponseEntity.ok(report);
+    }
+    
+    /**
+     * Calculate ingredient cost for a list of orders
+     */
+    private BigDecimal calculateIngredientCost(List<Order> orders) {
+        BigDecimal totalCost = BigDecimal.ZERO;
+        
+        // Only calculate for completed orders
+        List<Order> completedOrders = orders.stream()
+                .filter(o -> "Completed".equals(o.getStatus()))
+                .toList();
+        
+        for (Order order : completedOrders) {
+            List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+            
+            for (OrderItem item : orderItems) {
+                // Get ingredients for this product
+                List<ProductIngredient> productIngredients = 
+                        productIngredientRepository.findByProductIdWithIngredient(item.getProduct().getId());
+                
+                // Calculate cost for each ingredient
+                for (ProductIngredient pi : productIngredients) {
+                    BigDecimal ingredientCostPerUnit = pi.getIngredient().getPricePerUnit();
+                    BigDecimal quantityNeeded = pi.getQuantityRequired().multiply(new BigDecimal(item.getQuantity()));
+                    BigDecimal itemIngredientCost = ingredientCostPerUnit.multiply(quantityNeeded);
+                    totalCost = totalCost.add(itemIngredientCost);
+                }
+            }
+        }
+        
+        return totalCost;
+    }
+    
+    /**
+     * Calculate prorated daily salary cost
+     * Takes the monthly salary and divides by average days in month (30)
+     */
+    private BigDecimal calculateDailySalaryCost(LocalDate date) {
+        int month = date.getMonthValue();
+        int year = date.getYear();
+        
+        // Get paid salaries for this month
+        Double totalMonthSalary = salaryRepository.getTotalSalaryPaid(month, year);
+        
+        if (totalMonthSalary == null || totalMonthSalary == 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Prorate to daily cost (divide by 30 days)
+        return new BigDecimal(totalMonthSalary).divide(new BigDecimal(30), 2, java.math.RoundingMode.HALF_UP);
     }
 }

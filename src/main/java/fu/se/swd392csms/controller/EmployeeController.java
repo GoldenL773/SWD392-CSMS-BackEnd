@@ -58,6 +58,17 @@ public class EmployeeController {
     }
     
     /**
+     * Get current user's employee profile
+     * Allows any authenticated user to get their own employee profile
+     */
+    @GetMapping("/me")
+    @Operation(summary = "Get my employee profile", description = "Get the employee profile for the currently authenticated user")
+    public ResponseEntity<EmployeeResponse> getMyEmployeeProfile() {
+        EmployeeResponse employee = employeeService.getCurrentEmployeeProfile();
+        return ResponseEntity.ok(employee);
+    }
+
+    /**
      * Get employee by ID
      */
     @GetMapping("/{id}")

@@ -1,25 +1,5 @@
 package fu.se.swd392csms.service.impl;
 
-import fu.se.swd392csms.dto.request.AttendanceRequest;
-import fu.se.swd392csms.dto.request.EmployeeRequest;
-import fu.se.swd392csms.dto.request.SalaryRequest;
-import fu.se.swd392csms.dto.response.AttendanceResponse;
-import fu.se.swd392csms.dto.response.EmployeeResponse;
-import fu.se.swd392csms.dto.response.MessageResponse;
-import fu.se.swd392csms.dto.response.SalaryResponse;
-import fu.se.swd392csms.entity.*;
-import fu.se.swd392csms.exception.BadRequestException;
-import fu.se.swd392csms.exception.ResourceNotFoundException;
-import fu.se.swd392csms.repository.*;
-import fu.se.swd392csms.service.EmployeeService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -30,6 +10,38 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import fu.se.swd392csms.dto.request.AttendanceRequest;
+import fu.se.swd392csms.dto.request.EmployeeRequest;
+import fu.se.swd392csms.dto.request.SalaryRequest;
+import fu.se.swd392csms.dto.response.AttendanceResponse;
+import fu.se.swd392csms.dto.response.EmployeeResponse;
+import fu.se.swd392csms.dto.response.MessageResponse;
+import fu.se.swd392csms.dto.response.SalaryResponse;
+import fu.se.swd392csms.entity.Attendance;
+import fu.se.swd392csms.entity.Employee;
+import fu.se.swd392csms.entity.Role;
+import fu.se.swd392csms.entity.Salary;
+import fu.se.swd392csms.entity.User;
+import fu.se.swd392csms.exception.BadRequestException;
+import fu.se.swd392csms.exception.ResourceNotFoundException;
+import fu.se.swd392csms.repository.AttendanceRepository;
+import fu.se.swd392csms.repository.EmployeeRepository;
+import fu.se.swd392csms.repository.RoleRepository;
+import fu.se.swd392csms.repository.SalaryRepository;
+import fu.se.swd392csms.repository.UserRepository;
+import fu.se.swd392csms.service.EmployeeService;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Employee Service Implementation
@@ -122,6 +134,27 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponse getEmployeeById(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
+        return convertToEmployeeResponse(employee);
+    }
+
+    /**
+     * Get current authenticated user's employee profile
+     * @return Employee response for current user
+     */
+    @Override
+    public EmployeeResponse getCurrentEmployeeProfile() {
+        // Get current authenticated user from security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        // Find user by username
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", userDetails.getUsername()));
+
+        // Find employee by user ID
+        Employee employee = employeeRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user: " + user.getUsername()));
+
         return convertToEmployeeResponse(employee);
     }
     

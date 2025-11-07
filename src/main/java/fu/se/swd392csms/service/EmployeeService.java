@@ -1,5 +1,10 @@
 package fu.se.swd392csms.service;
 
+import java.time.LocalDate;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import fu.se.swd392csms.dto.request.AttendanceRequest;
 import fu.se.swd392csms.dto.request.EmployeeRequest;
 import fu.se.swd392csms.dto.request.SalaryRequest;
@@ -7,10 +12,6 @@ import fu.se.swd392csms.dto.response.AttendanceResponse;
 import fu.se.swd392csms.dto.response.EmployeeResponse;
 import fu.se.swd392csms.dto.response.MessageResponse;
 import fu.se.swd392csms.dto.response.SalaryResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.time.LocalDate;
 
 /**
  * Employee Service Interface
@@ -31,7 +32,13 @@ public interface EmployeeService {
      * @return Employee response
      */
     EmployeeResponse getEmployeeById(Long id);
-    
+
+    /**
+     * Get current authenticated user's employee profile
+     * @return Employee response for current user
+     */
+    EmployeeResponse getCurrentEmployeeProfile();
+
     /**
      * Get all employees with optional filtering and pagination
      * @param status Optional status filter

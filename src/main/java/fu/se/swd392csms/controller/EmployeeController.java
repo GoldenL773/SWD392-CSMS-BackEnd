@@ -72,7 +72,7 @@ public class EmployeeController {
      * Create new employee
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Create new employee", description = "Create a new employee with user account")
     public ResponseEntity<EmployeeResponse> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         EmployeeResponse employee = employeeService.createEmployee(request);

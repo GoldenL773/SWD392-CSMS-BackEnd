@@ -1,12 +1,14 @@
 package fu.se.swd392csms.repository;
 
-import fu.se.swd392csms.entity.SalaryUpdatedHistory;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import fu.se.swd392csms.entity.SalaryUpdatedHistory;
 
 /**
  * Repository interface for SalaryUpdatedHistory entity
@@ -21,7 +23,7 @@ public interface SalaryUpdatedHistoryRepository extends JpaRepository<SalaryUpda
      * @return List of history records ordered by date descending
      */
     @Query("SELECT h FROM SalaryUpdatedHistory h WHERE h.salary.id = :salaryId ORDER BY h.changeDate DESC")
-    List<SalaryUpdatedHistory> findBySalaryId(Long salaryId);
+    List<SalaryUpdatedHistory> findBySalaryId(@Param("salaryId") Long salaryId);
     
     /**
      * Find all changes made by an employee

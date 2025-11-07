@@ -13,8 +13,9 @@ public class CorsConfig implements WebMvcConfigurer {
     
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:3000", "http://localhost:5173")
+    // Allow frontend dev ports (3000, 3001 for Vite's fallback, and 5173)
+    registry.addMapping("/api/**")
+        .allowedOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:5173")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)

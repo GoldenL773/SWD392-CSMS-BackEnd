@@ -216,14 +216,49 @@ public class ProductServiceImpl implements ProductService {
         // Fetch product ingredients
         List<ProductIngredient> productIngredients = productIngredientRepository.findByProductIdWithIngredient(product.getId());
         
+        // Compute availability status based on ingredients
+        boolean hasOutOfStock = false;
+        boolean hasLowStock = false;
+        
         List<ProductResponse.ProductIngredientInfo> ingredients = productIngredients.stream()
-                .map(pi -> ProductResponse.ProductIngredientInfo.builder()
-                        .ingredientId(pi.getIngredient().getId())
-                        .ingredientName(pi.getIngredient().getName())
-                        .quantityRequired(pi.getQuantityRequired())
-                        .unit(pi.getIngredient().getUnit())
-                        .build())
+                .map(pi -> {
+                    Ingredient ingredient = pi.getIngredient();
+                    boolean isLowStock = ingredient.getQuantity().compareTo(ingredient.getMinimumStock()) < 0;
+                    boolean isOutOfStock = ingredient.getQuantity().compareTo(java.math.BigDecimal.ZERO) <= 0;
+                    
+                    return ProductResponse.ProductIngredientInfo.builder()
+                            .ingredientId(ingredient.getId())
+                            .ingredientName(ingredient.getName())
+                            .requiredQuantity(pi.getQuantityRequired())
+                            .unit(ingredient.getUnit())
+                            .currentQuantity(ingredient.getQuantity())
+                            .minimumStock(ingredient.getMinimumStock())
+                            .isLowStock(isLowStock)
+                            .build();
+                })
                 .collect(java.util.stream.Collectors.toList());
+        
+        // Check if any ingredient is out of stock or low stock
+        for (ProductResponse.ProductIngredientInfo info : ingredients) {
+            if (info.getCurrentQuantity().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                hasOutOfStock = true;
+                break;
+            }
+            if (info.getIsLowStock()) {
+                hasLowStock = true;
+            }
+        }
+        
+        // Determine availability status
+        String availabilityStatus = "IN_STOCK";
+        boolean isAvailable = true;
+        
+        if (hasOutOfStock) {
+            availabilityStatus = "OUT_OF_STOCK";
+            isAvailable = false;
+        } else if (hasLowStock) {
+            availabilityStatus = "LOW_STOCK";
+        }
         
         return ProductResponse.builder()
                 .id(product.getId())
@@ -232,7 +267,10 @@ public class ProductServiceImpl implements ProductService {
                 .price(product.getPrice())
                 .status(product.getStatus())
                 .description(product.getDescription())
-                .ingredients(ingredients)
+                .productIngredients(ingredients)
+                .availabilityStatus(availabilityStatus)
+                .isAvailable(isAvailable)
+                .isLowStock(hasLowStock)
                 .build();
     }
 }

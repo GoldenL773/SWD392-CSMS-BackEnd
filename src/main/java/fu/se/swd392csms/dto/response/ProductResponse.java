@@ -24,7 +24,12 @@ public class ProductResponse {
     private BigDecimal price;
     private String status;
     private String description;
-    private List<ProductIngredientInfo> ingredients;
+    private List<ProductIngredientInfo> productIngredients;
+    
+    // Availability status fields
+    private String availabilityStatus; // "IN_STOCK", "LOW_STOCK", "OUT_OF_STOCK"
+    private Boolean isAvailable; // true if product can be ordered
+    private Boolean isLowStock; // true if any ingredient is below minimum stock
     
     @Data
     @Builder
@@ -33,7 +38,10 @@ public class ProductResponse {
     public static class ProductIngredientInfo {
         private Long ingredientId;
         private String ingredientName;
-        private BigDecimal quantityRequired;
+        private BigDecimal requiredQuantity;
         private String unit;
+        private BigDecimal currentQuantity; // Current ingredient stock
+        private BigDecimal minimumStock; // Minimum stock threshold
+        private Boolean isLowStock; // true if current < minimum
     }
 }

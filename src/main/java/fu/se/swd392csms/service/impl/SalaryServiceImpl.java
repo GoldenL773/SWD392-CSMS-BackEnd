@@ -49,6 +49,11 @@ public class SalaryServiceImpl implements SalaryService {
         // Get all active employees
         List<Employee> activeEmployees = employeeRepository.findAll().stream()
                 .filter(e -> "ACTIVE".equalsIgnoreCase(e.getStatus()) || "Active".equalsIgnoreCase(e.getStatus()))
+                // Exclude Manager and Admin from salary calculation per business rule
+                .filter(e -> {
+                    String pos = e.getPosition() != null ? e.getPosition().toLowerCase() : "";
+                    return !(pos.contains("manager") || pos.contains("admin"));
+                })
                 .collect(Collectors.toList());
         
         List<SalaryResponse> createdSalaries = new ArrayList<>();

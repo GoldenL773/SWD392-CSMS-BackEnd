@@ -1,6 +1,7 @@
 package fu.se.swd392csms.controller;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fu.se.swd392csms.dto.request.AttendanceRequest;
 import fu.se.swd392csms.dto.response.AttendanceResponse;
+import fu.se.swd392csms.exception.BadRequestException;
 import fu.se.swd392csms.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,22 +39,32 @@ public class AttendanceController {
     
     /**
      * Employee check-in
+     * Only allowed during working hours (8 AM - 5 PM)
      */
     @PostMapping("/check-in/{employeeId}")
-    @Operation(summary = "Check-in", description = "Employee check-in for the day")
+    @Operation(summary = "Check-in", description = "Employee check-in for the day (working hours: 8 AM - 5 PM)")
     public ResponseEntity<AttendanceResponse> checkIn(@PathVariable Long employeeId) {
+        // Validate working hours
+        LocalTime now = LocalTime.now();
+        LocalTime workStart = LocalTime.of(8, 0);
+        LocalTime workEnd = LocalTime.of(17, 0);
+        
+        if (now.isBefore(workStart) || now.isAfter(workEnd)) {
+            throw new BadRequestException("Check-in only allowed during working hours (8 AM - 5 PM)");
+        }
+        
         AttendanceResponse response = attendanceService.checkIn(employeeId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     /**
-     * Employee check-out
+     * Employee check-out (DEPRECATED - Auto check-out at end of shift)
+     * Kept for backward compatibility but should not be used
      */
     @PostMapping("/check-out/{employeeId}")
-    @Operation(summary = "Check-out", description = "Employee check-out for the day")
+    @Operation(summary = "Check-out (DEPRECATED)", description = "DEPRECATED - Check-out happens automatically at 11:59 PM")
     public ResponseEntity<AttendanceResponse> checkOut(@PathVariable Long employeeId) {
-        AttendanceResponse response = attendanceService.checkOut(employeeId);
-        return ResponseEntity.ok(response);
+        throw new BadRequestException("Check-out is automatic at end of shift (11:59 PM). Manual check-out is no longer supported.");
     }
     
     /**

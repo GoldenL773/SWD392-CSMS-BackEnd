@@ -55,6 +55,58 @@ public class AttendanceScheduler {
                 log.info("No employees to auto-checkout");
                 return;
             }
+
+  /**
+   * Early Absent marking: Immediately after end of working hours (5:01 PM),
+   * mark employees who have not checked in today as Absent.
+   * This avoids waiting until midnight and provides quicker visibility.
+   * Runs daily at 17:01.
+   */
+  @Scheduled(cron = "0 1 17 * * ?") // Every day at 5:01 PM
+  @Transactional
+  public void markAbsentAfterShift() {
+      log.info("Starting early absent marking (after shift) ...");
+
+      try {
+          LocalDate today = LocalDate.now();
+
+          // Get all active employees
+          List<Employee> allEmployees = employeeRepository.findAll();
+
+          // Find employees who have already checked in today
+          // (ensures we don't mark those who did check in)
+          List<Long> checkedInToday = attendanceRepository.findByDate(today).stream()
+                  .filter(a -> a.getCheckInTime() != null)
+                  .map(a -> a.getEmployee().getId())
+                  .toList();
+
+          for (Employee employee : allEmployees) {
+              if (!checkedInToday.contains(employee.getId())) {
+                  // Avoid duplicate absent: ensure no attendance exists for today for this employee
+                  boolean hasAnyAttendance = attendanceRepository
+                          .findByEmployeeIdAndDate(employee.getId(), today)
+                          .isPresent();
+                  if (hasAnyAttendance) {
+                      continue;
+                  }
+
+                  Attendance absentAttendance = Attendance.builder()
+                          .employee(employee)
+                          .date(today)
+                          .status("Absent")
+                          .notes("Auto-marked absent after shift - no check-in record by 17:00")
+                          .build();
+
+                  attendanceRepository.save(absentAttendance);
+                  log.info("Early absent marked for employee {} (ID: {})", employee.getFullName(), employee.getId());
+              }
+          }
+
+          log.info("Early absent marking finished");
+      } catch (Exception e) {
+          log.error("Error during early absent marking: {}", e.getMessage(), e);
+      }
+  }
             
             log.info("Found {} employee(s) to auto-checkout", attendancesWithoutCheckout.size());
             

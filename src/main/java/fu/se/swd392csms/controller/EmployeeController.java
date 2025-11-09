@@ -24,10 +24,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
-/**
- * Employee Controller
- * Handles HTTP requests for employee management
- */
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
@@ -35,10 +31,7 @@ import java.time.LocalDate;
 public class EmployeeController {
     
     private final EmployeeService employeeService;
-    
-    /**
-     * Get all employees with optional filtering and pagination
-     */
+
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get all employees", description = "Get all employees with optional status filter and pagination")
@@ -56,11 +49,7 @@ public class EmployeeController {
         Page<EmployeeResponse> employees = employeeService.getAllEmployees(status, pageable);
         return ResponseEntity.ok(employees);
     }
-    
-    /**
-     * Get current user's employee profile
-     * Allows any authenticated user to get their own employee profile
-     */
+
     @GetMapping("/me")
     @Operation(summary = "Get my employee profile", description = "Get the employee profile for the currently authenticated user")
     public ResponseEntity<EmployeeResponse> getMyEmployeeProfile() {
@@ -68,9 +57,6 @@ public class EmployeeController {
         return ResponseEntity.ok(employee);
     }
 
-    /**
-     * Get employee by ID
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get employee by ID", description = "Get a specific employee by their ID")
@@ -78,10 +64,7 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.getEmployeeById(id);
         return ResponseEntity.ok(employee);
     }
-    
-    /**
-     * Create new employee
-     */
+
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Create new employee", description = "Create a new employee with user account")
@@ -89,10 +72,7 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.createEmployee(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(employee);
     }
-    
-    /**
-     * Update employee
-     */
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Update employee", description = "Update an existing employee")
@@ -102,10 +82,7 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.updateEmployee(id, request);
         return ResponseEntity.ok(employee);
     }
-    
-    /**
-     * Delete employee
-     */
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Delete employee", description = "Delete an employee by ID")
@@ -113,10 +90,7 @@ public class EmployeeController {
         MessageResponse response = employeeService.deleteEmployee(id);
         return ResponseEntity.ok(response);
     }
-    
-    /**
-     * Get employee attendance records
-     */
+
     @GetMapping("/{id}/attendance")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get employee attendance", description = "Get attendance records for a specific employee")
@@ -131,10 +105,7 @@ public class EmployeeController {
         Page<AttendanceResponse> attendance = employeeService.getEmployeeAttendance(id, startDate, endDate, pageable);
         return ResponseEntity.ok(attendance);
     }
-    
-    /**
-     * Add attendance record
-     */
+
     @PostMapping("/attendance")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Add attendance record", description = "Record employee attendance")
@@ -142,10 +113,7 @@ public class EmployeeController {
         AttendanceResponse attendance = employeeService.addAttendance(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(attendance);
     }
-    
-    /**
-     * Get employee salary records
-     */
+
     @GetMapping("/{id}/salary")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     @Operation(summary = "Get employee salary", description = "Get salary records for a specific employee")
@@ -160,10 +128,7 @@ public class EmployeeController {
         Page<SalaryResponse> salary = employeeService.getEmployeeSalary(id, month, year, pageable);
         return ResponseEntity.ok(salary);
     }
-    
-    /**
-     * Add salary record
-     */
+
     @PostMapping("/salary")
     @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Add salary record", description = "Add salary record for an employee")

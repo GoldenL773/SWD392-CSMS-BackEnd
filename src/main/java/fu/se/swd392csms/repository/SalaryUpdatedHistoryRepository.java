@@ -24,6 +24,11 @@ public interface SalaryUpdatedHistoryRepository extends JpaRepository<SalaryUpda
      */
     @Query("SELECT h FROM SalaryUpdatedHistory h WHERE h.salary.id = :salaryId ORDER BY h.changeDate DESC")
     List<SalaryUpdatedHistory> findBySalaryId(@Param("salaryId") Long salaryId);
+
+    /**
+     * Derived method version as requested: find all by salary id ordered by change date desc
+     */
+    List<SalaryUpdatedHistory> findAllBySalaryIdOrderByChangeDateDesc(Long salaryId);
     
     /**
      * Find all changes made by an employee

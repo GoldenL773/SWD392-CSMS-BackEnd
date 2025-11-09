@@ -38,7 +38,6 @@ public class SalaryServiceImpl implements SalaryService {
     private final SalaryUpdatedHistoryRepository salaryHistoryRepository;
     
     // Salary calculation constants
-    private static final BigDecimal HOURLY_RATE = new BigDecimal("50000"); // 50,000 VND per hour
     private static final BigDecimal OVERTIME_MULTIPLIER = new BigDecimal("1.5"); // 1.5x for overtime
     private static final int STANDARD_WORK_DAYS = 22; // Standard work days per month
     private static final int STANDARD_WORK_HOURS = 8; // Standard hours per day
@@ -94,18 +93,21 @@ public class SalaryServiceImpl implements SalaryService {
                 }
             }
             
-            // Calculate base salary (from employee's salary or calculated from hours)
-            BigDecimal baseSalary = employee.getSalary() != null ? 
-                    employee.getSalary() : 
-                    calculateBaseSalaryFromHours(totalWorkingHours);
+            // Monthly-based calculation: base = employee's monthly salary
+            BigDecimal baseSalary = employee.getSalary() != null ? employee.getSalary().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+            // Derive hourly rate from monthly salary (22 work days, 8 hours/day)
+            BigDecimal divisor = BigDecimal.valueOf(STANDARD_WORK_DAYS * STANDARD_WORK_HOURS);
+            BigDecimal hourlyRate = divisor.signum() != 0
+                    ? baseSalary.divide(divisor, 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
             
             // Calculate overtime pay
             BigDecimal overtimePay = totalOvertimeHours
-                    .multiply(HOURLY_RATE)
+                    .multiply(hourlyRate)
                     .multiply(OVERTIME_MULTIPLIER)
                     .setScale(2, RoundingMode.HALF_UP);
             
-            // Calculate deductions for absent days
+            // Deductions for absent days based on monthly base
             BigDecimal deduction = calculateAbsentDeduction(baseSalary, absentDays);
             
             // Calculate total salary
@@ -194,7 +196,7 @@ public class SalaryServiceImpl implements SalaryService {
     
     @Override
     @Transactional
-    public SalaryResponse updateSalaryAdjustments(Long id, BigDecimal bonus, BigDecimal deductions, Long changedBy) {
+    public SalaryResponse updateSalaryAdjustments(Long id, BigDecimal bonus, BigDecimal deductions, Long changedBy, String note) {
         Salary salary = salaryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Salary", "id", id));
         
@@ -228,7 +230,7 @@ public class SalaryServiceImpl implements SalaryService {
         salary.setTotalSalary(newTotal);
         
         history.setNewTotalSalary(newTotal);
-        history.setNote("Bonus and deductions updated");
+        history.setNote(note != null && !note.isBlank() ? note : "Bonus and deductions updated");
         
         salaryHistoryRepository.save(history);
         Salary updated = salaryRepository.save(salary);
@@ -305,9 +307,8 @@ public class SalaryServiceImpl implements SalaryService {
      * Calculate base salary from working hours
      */
     private BigDecimal calculateBaseSalaryFromHours(BigDecimal totalHours) {
-        return totalHours
-                .multiply(HOURLY_RATE)
-                .setScale(2, RoundingMode.HALF_UP);
+        // Deprecated: base salary now strictly uses employee's hourly rate × hours
+        return totalHours.setScale(2, RoundingMode.HALF_UP);
     }
     
     /**
@@ -345,5 +346,27 @@ public class SalaryServiceImpl implements SalaryService {
                 .paymentDate(salary.getPaymentDate())
                 .notes(salary.getNotes())
                 .build();
+    }
+
+    @Override
+    public List<fu.se.swd392csms.dto.response.SalaryHistoryResponse> getSalaryHistory(Long salaryId) {
+        List<fu.se.swd392csms.entity.SalaryUpdatedHistory> items =
+                salaryHistoryRepository.findAllBySalaryIdOrderByChangeDateDesc(salaryId);
+        return items.stream().map(h -> fu.se.swd392csms.dto.response.SalaryHistoryResponse.builder()
+                .id(h.getId())
+                .salaryId(salaryId)
+                .changeDate(h.getChangeDate())
+                .changedByName(h.getChangedBy() != null && h.getChangedBy().getUser() != null
+                        ? h.getChangedBy().getUser().getUsername()
+                        : (h.getChangedBy() != null ? h.getChangedBy().getFullName() : null))
+                .note(h.getNote())
+                .oldBonus(h.getOldBonus())
+                .newBonus(h.getNewBonus())
+                .oldDeduction(h.getOldDeduction())
+                .newDeduction(h.getNewDeduction())
+                .oldTotalSalary(h.getOldTotalSalary())
+                .newTotalSalary(h.getNewTotalSalary())
+                .build()
+        ).collect(java.util.stream.Collectors.toList());
     }
 }

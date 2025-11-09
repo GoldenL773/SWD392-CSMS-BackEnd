@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fu.se.swd392csms.dto.request.SalaryRequest;
 import fu.se.swd392csms.dto.response.SalaryResponse;
+import fu.se.swd392csms.dto.response.SalaryHistoryResponse;
 import fu.se.swd392csms.service.SalaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -115,8 +117,9 @@ public class SalaryController {
                 new BigDecimal(adjustments.get("deductions").toString()) : null;
         Long changedBy = adjustments.containsKey("changedBy") ? 
                 Long.valueOf(adjustments.get("changedBy").toString()) : 1L;
+        String note = adjustments.containsKey("note") ? adjustments.get("note").toString() : null;
         
-        SalaryResponse response = salaryService.updateSalaryAdjustments(id, bonus, deductions, changedBy);
+        SalaryResponse response = salaryService.updateSalaryAdjustments(id, bonus, deductions, changedBy, note);
         return ResponseEntity.ok(response);
     }
     
@@ -182,5 +185,16 @@ public class SalaryController {
             @RequestParam Integer year) {
         List<SalaryResponse> responses = salaryService.getPaidSalariesByPeriod(month, year);
         return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Get salary update history by salaryId
+     */
+    @GetMapping("/{salaryId}/history")
+    @PreAuthorize("hasAnyAuthority('ADMIN','FINANCE')")
+    @Operation(summary = "Get salary update history", description = "Retrieve audit history for a salary record")
+    public ResponseEntity<List<SalaryHistoryResponse>> getSalaryHistory(@PathVariable Long salaryId) {
+        List<SalaryHistoryResponse> history = salaryService.getSalaryHistory(salaryId);
+        return ResponseEntity.ok(history);
     }
 }

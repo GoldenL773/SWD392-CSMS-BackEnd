@@ -64,7 +64,7 @@ public class AttendanceController {
     @PostMapping("/check-out/{employeeId}")
     @Operation(summary = "Check-out (DEPRECATED)", description = "DEPRECATED - Check-out happens automatically at 11:59 PM")
     public ResponseEntity<AttendanceResponse> checkOut(@PathVariable Long employeeId) {
-        throw new BadRequestException("Check-out is automatic at end of shift (11:59 PM). Manual check-out is no longer supported.");
+        throw new BadRequestException("Check-out is automatic at end of shift (05:01 PM).");
     }
     
     /**

@@ -97,4 +97,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @return Number of orders with the status
      */
     long countByStatus(String status);
+
+    /**
+     * Find pending orders older than the provided threshold (optimized filtering at DB level)
+     * @param threshold LocalDateTime threshold; orders with orderDate before this are returned
+     */
+    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING' AND o.orderDate < :threshold")
+    List<Order> findPendingOrdersOlderThan(@Param("threshold") LocalDateTime threshold);
 }

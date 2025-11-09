@@ -2,6 +2,7 @@ package fu.se.swd392csms.service;
 
 import fu.se.swd392csms.dto.request.SalaryRequest;
 import fu.se.swd392csms.dto.response.SalaryResponse;
+import fu.se.swd392csms.dto.response.SalaryHistoryResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -63,7 +64,7 @@ public interface SalaryService {
      * @param changedBy Employee ID who made the change
      * @return Updated salary response
      */
-    SalaryResponse updateSalaryAdjustments(Long id, BigDecimal bonus, BigDecimal deductions, Long changedBy);
+    SalaryResponse updateSalaryAdjustments(Long id, BigDecimal bonus, BigDecimal deductions, Long changedBy, String note);
     
     /**
      * Mark salary as paid
@@ -106,4 +107,11 @@ public interface SalaryService {
      * @return List of paid salary records
      */
     List<SalaryResponse> getPaidSalariesByPeriod(Integer month, Integer year);
+
+    /**
+     * Get update history for a salary record
+     * @param salaryId Salary ID
+     * @return List of history items ordered by newest first
+     */
+    List<SalaryHistoryResponse> getSalaryHistory(Long salaryId);
 }

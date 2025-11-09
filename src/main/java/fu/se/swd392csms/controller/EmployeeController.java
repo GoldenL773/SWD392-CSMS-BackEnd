@@ -118,7 +118,7 @@ public class EmployeeController {
      * Get employee attendance records
      */
     @GetMapping("/{id}/attendance")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'FINANCE')")
     @Operation(summary = "Get employee attendance", description = "Get attendance records for a specific employee")
     public ResponseEntity<Page<AttendanceResponse>> getEmployeeAttendance(
             @PathVariable Long id,
@@ -147,7 +147,7 @@ public class EmployeeController {
      * Get employee salary records
      */
     @GetMapping("/{id}/salary")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'FINANCE')")
     @Operation(summary = "Get employee salary", description = "Get salary records for a specific employee")
     public ResponseEntity<Page<SalaryResponse>> getEmployeeSalary(
             @PathVariable Long id,

@@ -17,7 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/ingredients")
+@RequestMapping("/api/ingredients-v1")
 @RequiredArgsConstructor
 public class IngredientController_v1 {
 
@@ -40,7 +40,7 @@ public class IngredientController_v1 {
     }
 
 
-    @PostMapping("/transactions")
+    @PostMapping("/transactions-v1")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<IngredientTransactionResponse> recordTransaction(
             @Valid @RequestBody IngredientTransactionRequest request) {

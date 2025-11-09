@@ -34,7 +34,7 @@ public class OrderController {
      * Get all orders with optional filtering and pagination
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'STAFF', 'FINANCE')")
     @Operation(summary = "Get all orders", description = "Get all orders with optional status filter and pagination")
     public ResponseEntity<Page<OrderResponse>> getAllOrders(
             @RequestParam(required = false) String status,

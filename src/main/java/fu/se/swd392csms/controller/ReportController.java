@@ -1,6 +1,7 @@
 package fu.se.swd392csms.controller;
 
 import fu.se.swd392csms.dto.response.DailyReportResponse;
+import fu.se.swd392csms.dto.response.IngredientTransactionResponse;
 import fu.se.swd392csms.repository.OrderRepository;
 import fu.se.swd392csms.repository.OrderItemRepository;
 import fu.se.swd392csms.repository.ProductIngredientRepository;
@@ -11,6 +12,9 @@ import fu.se.swd392csms.entity.ProductIngredient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +41,7 @@ public class ReportController {
     private final OrderItemRepository orderItemRepository;
     private final ProductIngredientRepository productIngredientRepository;
     private final SalaryRepository salaryRepository;
+    private final fu.se.swd392csms.service.IngredientService ingredientService;
     
     /**
      * Get daily reports with optional date range filter
@@ -99,6 +104,23 @@ public class ReportController {
         }
         
         return ResponseEntity.ok(reports);
+    }
+    
+    /**
+     * Get ingredient transactions (read-only) for reports
+     */
+    @GetMapping("/transactions")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'FINANCE')")
+    @Operation(summary = "Get ingredient transactions (reports)", description = "Get ingredient transactions with optional filters")
+    public ResponseEntity<Page<IngredientTransactionResponse>> getReportTransactions(
+            @RequestParam(required = false) Long ingredientId,
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<IngredientTransactionResponse> transactions =
+                ingredientService.getTransactions(ingredientId, type, pageable);
+        return ResponseEntity.ok(transactions);
     }
     
     /**

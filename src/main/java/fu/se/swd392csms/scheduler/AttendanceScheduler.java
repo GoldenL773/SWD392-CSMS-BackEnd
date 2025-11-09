@@ -30,15 +30,15 @@ public class AttendanceScheduler {
     private final EmployeeRepository employeeRepository;
     
     // Configuration
-    private static final LocalTime END_OF_DAY = LocalTime.of(23, 59); // 11:59 PM
+    private static final LocalTime END_OF_DAY = LocalTime.of(17, 01); // 05:01 PM
     private static final LocalTime STANDARD_START_TIME = LocalTime.of(8, 0); // 8:00 AM
     private static final int STANDARD_WORK_HOURS = 8;
     
     /**
      * Auto-checkout: If an employee checked in but didn't check out, automatically check them out at end of day
-     * Runs daily at 11:59 PM
+     * Runs daily at 05:01 PM
      */
-    @Scheduled(cron = "0 59 23 * * ?") // Every day at 11:59 PM
+    @Scheduled(cron = "0 01 17 * * ?") // Every day at 05:01 PM
     @Transactional
     public void autoCheckoutEmployees() {
         log.info("Starting auto-checkout process for end of day...");
@@ -62,7 +62,7 @@ public class AttendanceScheduler {
    * This avoids waiting until midnight and provides quicker visibility.
    * Runs daily at 17:01.
    */
-  @Scheduled(cron = "0 1 17 * * ?") // Every day at 5:01 PM
+  @Scheduled(cron = "0 01 17 * * ?") // Every day at 5:01 PM
   @Transactional
   public void markAbsentAfterShift() {
       log.info("Starting early absent marking (after shift) ...");

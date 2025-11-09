@@ -56,6 +56,42 @@ public class AttendanceScheduler {
                 return;
             }
 
+            log.info("Found {} employee(s) to auto-checkout", attendancesWithoutCheckout.size());
+            
+            for (Attendance attendance : attendancesWithoutCheckout) {
+                try {
+                    // Set checkout time to end of day
+                    attendance.setCheckOutTime(END_OF_DAY);
+                    
+                    // Calculate working hours
+                    calculateWorkingHours(attendance);
+                    
+                    // Add note indicating auto-checkout
+                    String existingNotes = attendance.getNotes() != null ? attendance.getNotes() + "; " : "";
+                    attendance.setNotes(existingNotes + "Auto-checked out at end of day");
+                    
+                    attendanceRepository.save(attendance);
+                    
+                    log.info("Auto-checked out employee {} (ID: {}) at {}", 
+                            attendance.getEmployee().getFullName(), 
+                            attendance.getEmployee().getId(), 
+                            END_OF_DAY);
+                    
+                } catch (Exception e) {
+                    log.error("Error auto-checking out employee {} (ID: {}): {}", 
+                            attendance.getEmployee().getFullName(), 
+                            attendance.getEmployee().getId(), 
+                            e.getMessage(), e);
+                }
+            }
+            
+            log.info("Auto-checkout process completed successfully");
+            
+        } catch (Exception e) {
+            log.error("Error during auto-checkout process: {}", e.getMessage(), e);
+        }
+    }
+
   /**
    * Early Absent marking: Immediately after end of working hours (5:01 PM),
    * mark employees who have not checked in today as Absent.
@@ -107,42 +143,6 @@ public class AttendanceScheduler {
           log.error("Error during early absent marking: {}", e.getMessage(), e);
       }
   }
-            
-            log.info("Found {} employee(s) to auto-checkout", attendancesWithoutCheckout.size());
-            
-            for (Attendance attendance : attendancesWithoutCheckout) {
-                try {
-                    // Set checkout time to end of day
-                    attendance.setCheckOutTime(END_OF_DAY);
-                    
-                    // Calculate working hours
-                    calculateWorkingHours(attendance);
-                    
-                    // Add note indicating auto-checkout
-                    String existingNotes = attendance.getNotes() != null ? attendance.getNotes() + "; " : "";
-                    attendance.setNotes(existingNotes + "Auto-checked out at end of day");
-                    
-                    attendanceRepository.save(attendance);
-                    
-                    log.info("Auto-checked out employee {} (ID: {}) at {}", 
-                            attendance.getEmployee().getFullName(), 
-                            attendance.getEmployee().getId(), 
-                            END_OF_DAY);
-                    
-                } catch (Exception e) {
-                    log.error("Error auto-checking out employee {} (ID: {}): {}", 
-                            attendance.getEmployee().getFullName(), 
-                            attendance.getEmployee().getId(), 
-                            e.getMessage(), e);
-                }
-            }
-            
-            log.info("Auto-checkout process completed successfully");
-            
-        } catch (Exception e) {
-            log.error("Error during auto-checkout process: {}", e.getMessage(), e);
-        }
-    }
     
     /**
      * Auto-absent marking: If an employee didn't check in at all during the day, mark them as absent

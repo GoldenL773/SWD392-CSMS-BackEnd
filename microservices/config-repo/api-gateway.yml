@@ -1,0 +1,80 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth,/api/auth/**
+        - id: employee-service
+          uri: lb://EMPLOYEE-SERVICE
+          predicates:
+            - Path=/api/employees,/api/employees/**,/api/attendance,/api/attendance/**,/api/salaries,/api/salaries/**
+          filters:
+            - AuthenticationFilter
+        - id: product-service
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/products,/api/products/**,/api/categories,/api/categories/**,/api/combos,/api/combos/**,/api/promotions,/api/promotions/**,/api/recipes,/api/recipes/**
+          filters:
+            - AuthenticationFilter
+        - id: inventory-service
+          uri: lb://INVENTORY-SERVICE
+          predicates:
+            - Path=/api/inventory,/api/inventory/**,/api/ingredients,/api/ingredients/**,/api/transactions,/api/transactions/**,/api/product-ingredients,/api/product-ingredients/**,/api/suppliers,/api/suppliers/**
+          filters:
+            - AuthenticationFilter
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/orders,/api/orders/**
+          filters:
+            - AuthenticationFilter
+        - id: report-service
+          uri: lb://REPORT-SERVICE
+          predicates:
+            - Path=/api/reports,/api/reports/**,/api/dashboard,/api/dashboard/**
+          filters:
+            - AuthenticationFilter
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: auth-service
+        url: /api/auth/v3/api-docs
+      - name: employee-service
+        url: /api/employees/v3/api-docs
+      - name: product-service
+        url: /api/products/v3/api-docs
+      - name: inventory-service
+        url: /api/inventory/v3/api-docs
+      - name: order-service
+        url: /api/orders/v3/api-docs
+      - name: report-service
+        url: /api/reports/v3/api-docs

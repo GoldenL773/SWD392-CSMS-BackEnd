@@ -41,7 +41,7 @@ CREATE DATABASE CSMS_DB;
 
 3. **Configure application.properties**
 ```properties
-spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=CSMS_DB
+spring.datasource.url=jdbc:sqlserver://localhost:1434;databaseName=CSMS_DB
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 ```

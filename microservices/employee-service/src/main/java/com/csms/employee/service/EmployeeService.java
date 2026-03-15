@@ -35,7 +35,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public EmployeeResponse getEmployeeByUserId(Long userId) {
-        Employee employee = employeeRepository.findByUserId(userId)
+        Employee employee = employeeRepository.findFirstByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with user id: " + userId));
         return mapToResponse(employee);
     }
@@ -43,7 +43,7 @@ public class EmployeeService {
     @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
         if (request.getUserId() != null) {
-            java.util.Optional<Employee> existing = employeeRepository.findByUserId(request.getUserId());
+            java.util.Optional<Employee> existing = employeeRepository.findFirstByUserId(request.getUserId());
             if (existing.isPresent()) {
                 Employee employee = existing.get();
                 if (request.getFirstName() != null && !request.getFirstName().isEmpty()) employee.setFirstName(request.getFirstName());

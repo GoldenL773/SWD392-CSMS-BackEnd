@@ -112,8 +112,8 @@ public class AuthService {
         try {
             EmployeeClient.EmployeeRegistrationRequest employeeRequest = EmployeeClient.EmployeeRegistrationRequest.builder()
                     .userId(savedUser.getId())
-                    .firstName("") 
-                    .lastName("")  
+                    .firstName("New") 
+                    .lastName("Employee")  
                     .position("STAFF") 
                     .hireDate(java.time.LocalDate.now())
                     .build();

@@ -24,6 +24,8 @@ public class SalaryResponse {
     private LocalDate paymentDate;
     private LocalDate periodStart;
     private LocalDate periodEnd;
+    private Integer month;
+    private Integer year;
     private String status;
     private LocalDateTime createdAt;
 }

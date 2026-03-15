@@ -167,6 +167,8 @@ public class SalaryService {
                 .paymentDate(salary.getPaymentDate())
                 .periodStart(salary.getPeriodStart())
                 .periodEnd(salary.getPeriodEnd())
+                .month(salary.getPeriodStart() != null ? salary.getPeriodStart().getMonthValue() : null)
+                .year(salary.getPeriodStart() != null ? salary.getPeriodStart().getYear() : null)
                 .status(salary.getStatus())
                 .createdAt(salary.getCreatedAt())
                 .build();

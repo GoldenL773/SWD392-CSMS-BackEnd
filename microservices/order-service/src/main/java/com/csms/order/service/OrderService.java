@@ -54,7 +54,7 @@ public class OrderService {
         Order order = Order.builder()
                 .userId(request.getUserId())
                 .orderDate(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime())
-                .status("PROCESSING")
+                .status("PENDING")
                 .note(request.getNote())
                 .employeeName(request.getEmployeeName())
                 .totalAmount(request.getTotalAmount() != null ? request.getTotalAmount() : java.math.BigDecimal.ZERO)

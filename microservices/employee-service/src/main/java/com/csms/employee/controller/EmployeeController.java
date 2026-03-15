@@ -66,4 +66,23 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{employeeId}/salary")
+    public ResponseEntity<List<com.csms.employee.dto.SalaryResponse>> getEmployeeSalaries(
+            @PathVariable Long employeeId,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+        // Forwarding call to SalaryService since it's in the same microservice
+        // Alternatively, frontend should call /api/salaries/employee/{employeeId} directly,
+        // but adding this mapped endpoint to support the UI's employeeApi.js
+        List<com.csms.employee.dto.SalaryResponse> allSalaries = employeeService.getEmployeeSalaries(employeeId);
+        
+        if (month != null && year != null) {
+            allSalaries = allSalaries.stream()
+                .filter(s -> month.equals(s.getMonth()) && year.equals(s.getYear()))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return ResponseEntity.ok(allSalaries);
+    }
 }

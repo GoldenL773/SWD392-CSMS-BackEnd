@@ -58,6 +58,19 @@ public class SalaryController {
         return ResponseEntity.ok(salaryService.calculateMonthlySalaries(month, year));
     }
 
+    @PatchMapping("/{id}/adjustments")
+    public ResponseEntity<SalaryResponse> updateSalaryAdjustments(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Double> adjustments) {
+        
+        Double bonuses = adjustments.get("bonuses");
+        Double deductions = adjustments.get("deductions");
+        
+        // Let's create a method in SalaryService to handle this, or just do it inline here if simple enough.
+        // For clean architecture, calling service is better.
+        return ResponseEntity.ok(salaryService.updateSalaryAdjustments(id, bonuses, deductions));
+    }
+
     @PatchMapping("/{id}/mark-paid")
     public ResponseEntity<SalaryResponse> markPaid(@PathVariable Long id) {
         return ResponseEntity.ok(salaryService.markAsPaid(id));

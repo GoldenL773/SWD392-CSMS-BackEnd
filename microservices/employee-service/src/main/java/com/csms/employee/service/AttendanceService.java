@@ -75,19 +75,19 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceResponse checkIn(Long employeeId) {
+    public AttendanceResponse checkIn(Long employeeId, LocalDate date) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
 
-        LocalDate today = LocalDate.now();
-        Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, today)
+        LocalDate targetDate = date != null ? date : LocalDate.now();
+        Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, targetDate)
                 .orElse(new Attendance());
 
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         attendance.setEmployee(employee);
-        attendance.setDate(today);
+        attendance.setDate(targetDate);
         attendance.setCheckIn(now);
-        
+
         if (now.toLocalTime().isAfter(java.time.LocalTime.of(8, 0))) {
             attendance.setStatus("LATE");
         } else {
@@ -98,13 +98,13 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceResponse checkOut(Long employeeId) {
-        LocalDate today = LocalDate.now();
-        Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, today)
-                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for today. Please check in first."));
+    public AttendanceResponse checkOut(Long employeeId, LocalDate date) {
+        LocalDate targetDate = date != null ? date : LocalDate.now();
+        Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, targetDate)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this date. Please check in first."));
 
         attendance.setCheckOut(java.time.LocalDateTime.now());
-        
+
         return mapToResponse(attendanceRepository.save(attendance));
     }
 

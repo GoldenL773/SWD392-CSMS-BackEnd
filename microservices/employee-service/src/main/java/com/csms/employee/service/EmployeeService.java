@@ -102,6 +102,35 @@ public class EmployeeService {
         employeeRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<com.csms.employee.dto.SalaryResponse> getEmployeeSalaries(Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
+        
+        if (employee.getSalaries() == null) {
+            return java.util.Collections.emptyList();
+        }
+        
+        return employee.getSalaries().stream()
+                .map(salary -> com.csms.employee.dto.SalaryResponse.builder()
+                        .id(salary.getId())
+                        .employeeId(salary.getEmployee().getId())
+                        .employeeName(salary.getEmployee().getFirstName() + " " + salary.getEmployee().getLastName())
+                        .month(salary.getMonth())
+                        .year(salary.getYear())
+                        .baseSalary(salary.getBaseSalary())
+                        .totalHours(salary.getTotalHours())
+                        .hourlyRate(salary.getHourlyRate())
+                        .bonuses(salary.getBonuses())
+                        .deductions(salary.getDeductions())
+                        .totalSalary(salary.getTotalSalary())
+                        .status(salary.getStatus())
+                        .paymentDate(salary.getPaymentDate())
+                        .notes(salary.getNotes())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     private EmployeeResponse mapToResponse(Employee employee) {
         return EmployeeResponse.builder()
                 .id(employee.getId())

@@ -136,6 +136,24 @@ public class SalaryService {
     }
 
     @Transactional
+    public SalaryResponse updateSalaryAdjustments(Long id, Double bonuses, Double deductions) {
+        Salary salary = salaryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Salary not found: " + id));
+        
+        java.math.BigDecimal bonusAmount = bonuses != null ? java.math.BigDecimal.valueOf(bonuses) : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal dedAmount = deductions != null ? java.math.BigDecimal.valueOf(deductions) : java.math.BigDecimal.ZERO;
+        
+        salary.setBonus(bonusAmount);
+        salary.setDeductions(dedAmount);
+        
+        // Recalculate total amount
+        java.math.BigDecimal base = salary.getBaseSalary() != null ? salary.getBaseSalary() : java.math.BigDecimal.ZERO;
+        salary.setAmount(base.add(bonusAmount).subtract(dedAmount));
+        
+        return mapToResponse(salaryRepository.save(salary));
+    }
+
+    @Transactional
     public SalaryResponse markAsPaid(Long id) {
         Salary salary = salaryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Salary not found: " + id));

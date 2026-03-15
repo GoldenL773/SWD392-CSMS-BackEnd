@@ -2,66 +2,83 @@ package com.csms.report.controller;
 
 import com.csms.report.entity.ReportFile;
 import com.csms.report.repository.ReportFileRepository;
-import com.csms.report.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
-@Slf4j
 public class ReportFileController {
 
     private final ReportFileRepository reportFileRepository;
-    private final FileStorageService fileStorageService;
 
     @PostMapping("/upload")
-    public ResponseEntity<ReportFile> uploadReport(
+    public ResponseEntity<?> uploadReportFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
-            @RequestParam("description") String description,
+            @RequestParam(value = "description", required = false) String description,
             @RequestParam("reportType") String reportType,
             @RequestParam("reportPeriod") String reportPeriod) {
 
-        String fileName = fileStorageService.storeFile(file);
+        try {
+            ReportFile reportFile = ReportFile.builder()
+                    .fileName(file.getOriginalFilename())
+                    .fileType(file.getContentType())
+                    .fileData(file.getBytes())
+                    .title(title)
+                    .description(description)
+                    .reportType(reportType)
+                    .reportPeriod(reportPeriod)
+                    .uploadedAt(LocalDateTime.now())
+                    .build();
 
-        ReportFile reportFile = ReportFile.builder()
-                .title(title)
-                .description(description)
-                .reportType(reportType)
-                .reportPeriod(reportPeriod)
-                .fileName(fileName)
-                .filePath(fileName)
-                .contentType(file.getContentType())
-                .fileSize(file.getSize())
-                .build();
-
-        return ResponseEntity.ok(reportFileRepository.save(reportFile));
+            reportFileRepository.save(reportFile);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "File uploaded successfully"));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to upload file"));
+        }
     }
 
     @GetMapping("/files")
-    public ResponseEntity<List<ReportFile>> getAllReportFiles() {
-        return ResponseEntity.ok(reportFileRepository.findAllByOrderByCreatedAtDesc());
+    public ResponseEntity<List<Map<String, Object>>> getUploadedReports() {
+        List<Map<String, Object>> files = reportFileRepository.findAll().stream()
+                .map(rf -> Map.of(
+                        "id", rf.getId(),
+                        "fileName", rf.getFileName(),
+                        "fileType", rf.getFileType() != null ? rf.getFileType() : "application/octet-stream",
+                        "title", rf.getTitle(),
+                        "description", rf.getDescription() != null ? rf.getDescription() : "",
+                        "reportType", rf.getReportType(),
+                        "reportPeriod", rf.getReportPeriod(),
+                        "uploadedAt", rf.getUploadedAt().toString()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(files);
     }
 
     @GetMapping("/files/{id}/download")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadReportFile(@PathVariable Long id) {
         ReportFile reportFile = reportFileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("File not found with id: " + id));
 
-        Resource resource = fileStorageService.loadFileAsResource(reportFile.getFileName());
-
+        String fileType = reportFile.getFileType() != null ? reportFile.getFileType() : "application/octet-stream";
+        
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(reportFile.getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + reportFile.getTitle() + "\"")
-                .body(resource);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + reportFile.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType(fileType))
+                .body(reportFile.getFileData());
     }
 }

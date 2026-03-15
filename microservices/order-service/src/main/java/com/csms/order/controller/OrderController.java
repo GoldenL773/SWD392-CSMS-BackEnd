@@ -22,8 +22,8 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<org.springframework.data.domain.Page<OrderResponse>> getAllOrders(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME, fallbackPatterns = {"yyyy-MM-dd"}) java.time.LocalDateTime startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME, fallbackPatterns = {"yyyy-MM-dd"}) java.time.LocalDateTime endDate,
             org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(orderService.getAllOrders(status, startDate, endDate, pageable));
     }

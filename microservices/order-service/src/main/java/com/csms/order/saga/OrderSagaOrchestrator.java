@@ -140,8 +140,8 @@ public class OrderSagaOrchestrator {
                 }
             }
             
-            // Step 3: Confirm Order - Set status to PROCESSING
-            order.setStatus("PROCESSING");
+            // Step 3: Confirm Order - Set status to PENDING
+            order.setStatus("PENDING");
             orderRepository.save(order);
             log.info("Saga completed successfully for order: {}", order.getId());
             

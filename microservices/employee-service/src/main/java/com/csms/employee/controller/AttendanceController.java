@@ -56,13 +56,17 @@ public class AttendanceController {
     }
 
     @PostMapping("/check-in/{employeeId}")
-    public ResponseEntity<AttendanceResponse> checkIn(@PathVariable Long employeeId) {
-        return new ResponseEntity<>(attendanceService.checkIn(employeeId), HttpStatus.CREATED);
+    public ResponseEntity<AttendanceResponse> checkIn(
+            @PathVariable Long employeeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return new ResponseEntity<>(attendanceService.checkIn(employeeId, date), HttpStatus.CREATED);
     }
 
     @PostMapping("/check-out/{employeeId}")
-    public ResponseEntity<AttendanceResponse> checkOut(@PathVariable Long employeeId) {
-        return ResponseEntity.ok(attendanceService.checkOut(employeeId));
+    public ResponseEntity<AttendanceResponse> checkOut(
+            @PathVariable Long employeeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(attendanceService.checkOut(employeeId, date));
     }
 
     @DeleteMapping("/{id}")

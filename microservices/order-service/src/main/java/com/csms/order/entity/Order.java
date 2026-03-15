@@ -37,6 +37,15 @@ public class Order extends BaseEntity {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
+    @Column
+    private Long promotionId;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(length = 100)
+    private String employeeName;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();

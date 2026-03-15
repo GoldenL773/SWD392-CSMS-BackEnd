@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,6 +93,57 @@ public class SalaryService {
             throw new ResourceNotFoundException("Salary record not found with id: " + id);
         }
         salaryRepository.deleteById(id);
+    }
+
+    @Transactional
+    public List<SalaryResponse> calculateMonthlySalaries(int month, int year) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+        
+        List<Employee> employees = employeeRepository.findAll();
+        List<Salary> generatedSalaries = new java.util.ArrayList<>();
+        
+        for (Employee emp : employees) {
+            // Check if salary already exists for this period
+            // (Simplification: just create/update)
+            
+            // Calculate based on attendance
+            // For now, simple: amount = baseSalary (if exists) or default
+            java.math.BigDecimal base = emp.getBaseSalary() != null ? emp.getBaseSalary() : new java.math.BigDecimal("5000000");
+            
+            Salary salary = Salary.builder()
+                    .employee(emp)
+                    .amount(base)
+                    .periodStart(start)
+                    .periodEnd(end)
+                    .paymentDate(LocalDate.now().plusDays(5)) // Default payment date
+                    .status("PENDING")
+                    .build();
+            
+            generatedSalaries.add(salaryRepository.save(salary));
+        }
+        
+        return generatedSalaries.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public SalaryResponse markAsPaid(Long id) {
+        Salary salary = salaryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Salary not found: " + id));
+        salary.setStatus("PAID");
+        salary.setPaymentDate(LocalDate.now());
+        return mapToResponse(salaryRepository.save(salary));
+    }
+
+    @Transactional
+    public void markBatchAsPaid(List<Long> ids) {
+        for (Long id : ids) {
+            salaryRepository.findById(id).ifPresent(s -> {
+                s.setStatus("PAID");
+                s.setPaymentDate(LocalDate.now());
+                salaryRepository.save(s);
+            });
+        }
     }
 
     private SalaryResponse mapToResponse(Salary salary) {

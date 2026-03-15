@@ -19,20 +19,24 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts(
+    public ResponseEntity<org.springframework.data.domain.Page<ProductResponse>> getAllProducts(
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) Boolean available,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            org.springframework.data.domain.Pageable pageable) {
         
         if (search != null && !search.trim().isEmpty()) {
-            return ResponseEntity.ok(productService.searchProducts(search));
+            return ResponseEntity.ok(productService.searchProducts(search, pageable));
         } else if (categoryId != null) {
-            return ResponseEntity.ok(productService.getProductsByCategory(categoryId));
+            return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
+        } else if (category != null && !category.trim().isEmpty()) {
+            return ResponseEntity.ok(productService.getProductsByCategoryName(category, pageable));
         } else if (available != null && available) {
-            return ResponseEntity.ok(productService.getAvailableProducts());
+            return ResponseEntity.ok(productService.getAvailableProducts(pageable));
         }
         
-        return ResponseEntity.ok(productService.getAllProducts());
+        return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
 
     @GetMapping("/{id}")

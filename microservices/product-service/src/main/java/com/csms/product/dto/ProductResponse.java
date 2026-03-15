@@ -20,10 +20,13 @@ public class ProductResponse {
     private Long categoryId;
     private String categoryName;
     private Boolean available;
+    private String imageUrl;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     private java.util.List<VariantResponse> variants;
+    private java.util.List<IngredientResponse> ingredients;
 
     @Data
     @Builder
@@ -35,5 +38,17 @@ public class ProductResponse {
         private String temperature;
         private BigDecimal price;
         private String sku;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class IngredientResponse {
+        private Long ingredientId;
+        private String name;
+        private BigDecimal quantity;
+        private String unit;
+        private BigDecimal currentStock;
     }
 }

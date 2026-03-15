@@ -16,4 +16,17 @@ public class ProductResponse {
     private String name;
     private BigDecimal price;
     private Boolean available;
+    private Long categoryId;
+    private java.util.List<VariantResponse> variants;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VariantResponse {
+        private Long id;
+        private String size;
+        private String temperature;
+        private BigDecimal price;
+    }
 }

@@ -25,7 +25,11 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private Long productId;
 
-    @Column(nullable = false)
+    private Long variantId;
+
+    private Long comboId;
+
+    @Column(nullable = false, length = 200)
     private String productName;
 
     @Column(nullable = false)

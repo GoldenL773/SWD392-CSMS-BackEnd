@@ -19,6 +19,7 @@ public class ComboResponse {
     private String description;
     private BigDecimal price;
     private String status;
+    private String imageUrl;
     private List<ComboItemResponse> items;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

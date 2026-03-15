@@ -29,6 +29,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=native
+      - EUREKA_INSTANCE_HOSTNAME=config-server
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8888/actuator/health"]
       interval: 10s
@@ -51,6 +52,10 @@ services:
       - SPRING_APPLICATION_NAME=api-gateway
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=api-gateway
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -69,6 +74,10 @@ services:
       - SPRING_APPLICATION_NAME=auth-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=auth-service
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -87,6 +96,10 @@ services:
       - SPRING_APPLICATION_NAME=employee-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=employee-service
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -105,6 +118,10 @@ services:
       - SPRING_APPLICATION_NAME=product-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=product-service
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -123,6 +140,10 @@ services:
       - SPRING_APPLICATION_NAME=inventory-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=inventory-service
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -141,6 +162,10 @@ services:
       - SPRING_APPLICATION_NAME=order-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=order-service
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -159,6 +184,10 @@ services:
       - SPRING_APPLICATION_NAME=report-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=20
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=2000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+      - EUREKA_INSTANCE_HOSTNAME=report-service
     depends_on:
       eureka-server:
         condition: service_healthy

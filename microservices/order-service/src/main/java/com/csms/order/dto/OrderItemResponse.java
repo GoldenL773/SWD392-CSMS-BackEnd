@@ -18,4 +18,6 @@ public class OrderItemResponse {
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal subtotal;
+    private Long variantId;
+    private Long comboId;
 }

@@ -32,5 +32,6 @@ public class RecipeResponse {
         private String ingredientName;
         private BigDecimal quantity;
         private String unit;
+        private BigDecimal currentStock;
     }
 }

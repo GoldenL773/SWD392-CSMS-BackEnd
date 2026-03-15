@@ -44,6 +44,7 @@ public class ComboService {
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .status(request.getStatus() != null ? request.getStatus() : "AVAILABLE")
+                .imageUrl(request.getImageUrl())
                 .items(new ArrayList<>())
                 .build();
 
@@ -77,6 +78,7 @@ public class ComboService {
         if (request.getStatus() != null) {
             combo.setStatus(request.getStatus());
         }
+        combo.setImageUrl(request.getImageUrl());
 
         combo.getItems().clear();
 
@@ -119,6 +121,7 @@ public class ComboService {
                 .description(combo.getDescription())
                 .price(combo.getPrice())
                 .status(combo.getStatus())
+                .imageUrl(combo.getImageUrl())
                 .items(itemResponses)
                 .createdAt(combo.getCreatedAt())
                 .updatedAt(combo.getUpdatedAt())

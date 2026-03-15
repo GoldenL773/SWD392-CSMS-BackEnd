@@ -7,6 +7,8 @@ import com.csms.inventory.exception.ResourceNotFoundException;
 import com.csms.inventory.exception.ValidationException;
 import com.csms.inventory.repository.IngredientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +23,24 @@ public class IngredientService {
     private final IngredientRepository ingredientRepository;
 
     @Transactional(readOnly = true)
-    public List<IngredientResponse> getAllIngredients() {
-        return ingredientRepository.findAll().stream()
+    public org.springframework.data.domain.Page<IngredientResponse> getAllIngredients(org.springframework.data.domain.Pageable pageable) {
+        return ingredientRepository.findAll(pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<IngredientResponse> getAllIngredientsList() {
+        List<Ingredient> ingredients = ingredientRepository.findAll();
+        System.out.println("InventoryService: Found " + ingredients.size() + " ingredients in repository");
+        return ingredients.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<IngredientResponse> searchIngredients(String keyword, org.springframework.data.domain.Pageable pageable) {
+        return ingredientRepository.findByNameContainingIgnoreCase(keyword, pageable)
+                .map(this::mapToResponse);
     }
 
     @Transactional(readOnly = true)

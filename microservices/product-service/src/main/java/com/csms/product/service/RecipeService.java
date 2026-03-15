@@ -8,6 +8,8 @@ import com.csms.product.exception.ResourceNotFoundException;
 import com.csms.product.repository.ProductRepository;
 import com.csms.product.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,29 +20,40 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RecipeService {
+    private static final Logger log = LoggerFactory.getLogger(RecipeService.class);
 
     private final RecipeRepository recipeRepository;
     private final ProductRepository productRepository;
+    private final com.csms.product.client.InventoryClient inventoryClient;
 
     @Transactional(readOnly = true)
     public List<RecipeResponse> getAllRecipes() {
+        java.util.Map<Long, com.csms.product.dto.IngredientResponse> ingredientData = fetchIngredientData();
         return recipeRepository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(r -> mapToResponse(r, ingredientData))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public RecipeResponse getRecipesByProductId(Long productId) {
-        Recipe recipe = recipeRepository.findByProductId(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Recipe not found for product id: " + productId));
-        return mapToResponse(recipe);
+    public List<RecipeResponse> getRecipesByProductId(Long productId) {
+        java.util.Map<Long, com.csms.product.dto.IngredientResponse> ingredientData = fetchIngredientData();
+        return recipeRepository.findByProductId(productId).stream()
+                .map(r -> mapToResponse(r, ingredientData))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public RecipeResponse getRecipeById(Long id) {
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Recipe not found with id: " + id));
-        return mapToResponse(recipe);
+        return mapToResponse(recipe, fetchIngredientData());
+    }
+
+    public RecipeResponse getRecipeByProductIdSingle(Long productId) {
+        Recipe recipe = recipeRepository.findByProductId(productId)
+                .stream().findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Recipe not found for product: " + productId));
+        return mapToResponse(recipe, fetchIngredientData());
     }
 
     @Transactional
@@ -66,7 +79,7 @@ public class RecipeService {
 
         recipe.setIngredients(ingredients);
 
-        return mapToResponse(recipeRepository.save(recipe));
+        return mapToResponse(recipeRepository.save(recipe), fetchIngredientData());
     }
 
     @Transactional
@@ -89,7 +102,7 @@ public class RecipeService {
                 .collect(Collectors.toList());
         recipe.getIngredients().addAll(newIngredients);
 
-        return mapToResponse(recipeRepository.save(recipe));
+        return mapToResponse(recipeRepository.save(recipe), fetchIngredientData());
     }
 
     @Transactional
@@ -100,18 +113,45 @@ public class RecipeService {
         recipeRepository.deleteById(id);
     }
 
-    private RecipeResponse mapToResponse(Recipe recipe) {
+    private java.util.Map<Long, com.csms.product.dto.IngredientResponse> fetchIngredientData() {
+        java.util.Map<Long, com.csms.product.dto.IngredientResponse> ingredientMap = new java.util.HashMap<>();
+        try {
+            java.util.List<com.csms.product.dto.IngredientResponse> ingredients = inventoryClient.getAllIngredients();
+            if (ingredients != null) {
+                log.info("RecipeService: Fetched {} ingredients from inventory-service", ingredients.size());
+                ingredients.forEach(i -> {
+                    if (i.getId() != null) {
+                        ingredientMap.put(i.getId(), i);
+                    }
+                });
+            } else {
+                log.warn("RecipeService: Inventory service returned null list of ingredients");
+            }
+        } catch (Exception e) {
+            log.error("RecipeService: Failed to fetch ingredient data: {}", e.getMessage());
+        }
+        return ingredientMap;
+    }
+
+    private RecipeResponse mapToResponse(Recipe recipe, java.util.Map<Long, com.csms.product.dto.IngredientResponse> ingredientData) {
         String productName = productRepository.findById(recipe.getProductId())
                 .map(p -> p.getName())
                 .orElse("Unknown Product");
 
         List<RecipeResponse.IngredientResponse> ingredientResponses = recipe.getIngredients().stream()
-                .map(ing -> RecipeResponse.IngredientResponse.builder()
+                .map(ing -> {
+                    com.csms.product.dto.IngredientResponse data = ingredientData.get(ing.getIngredientId());
+                    String name = data != null ? data.getName() : "Ingredient " + ing.getIngredientId();
+                    java.math.BigDecimal stock = data != null ? data.getCurrentStock() : java.math.BigDecimal.ZERO;
+                    
+                    return RecipeResponse.IngredientResponse.builder()
                         .ingredientId(ing.getIngredientId())
-                        .ingredientName("Ingredient " + ing.getIngredientId())
+                        .ingredientName(name)
                         .quantity(ing.getQuantity())
                         .unit(ing.getUnit())
-                        .build())
+                        .currentStock(stock)
+                        .build();
+                })
                 .collect(Collectors.toList());
 
         return RecipeResponse.builder()

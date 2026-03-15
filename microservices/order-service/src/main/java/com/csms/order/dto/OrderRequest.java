@@ -20,4 +20,7 @@ public class OrderRequest {
     @Valid
     @com.fasterxml.jackson.annotation.JsonAlias("orderItems")
     private List<OrderItemRequest> items;
+
+    private Long promotionId;
+    private String employeeName;
 }

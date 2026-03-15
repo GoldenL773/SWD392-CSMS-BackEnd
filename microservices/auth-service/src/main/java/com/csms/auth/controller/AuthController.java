@@ -20,6 +20,11 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<com.csms.auth.entity.User> registerUser(@RequestBody com.csms.auth.dto.RegisterRequest registerRequest) {
+        return ResponseEntity.ok(authService.registerUser(registerRequest));
+    }
+
     @GetMapping("/validate")
     public ResponseEntity<Boolean> validateToken(@RequestParam String token) {
         boolean isValid = authService.validateToken(token);

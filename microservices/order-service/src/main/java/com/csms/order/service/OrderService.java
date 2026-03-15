@@ -52,11 +52,15 @@ public class OrderService {
                 .orderDate(LocalDateTime.now())
                 .status("PENDING")
                 .note(request.getNote())
+                .employeeName(request.getEmployeeName())
+                .promotionId(request.getPromotionId())
                 .build();
 
         for (OrderItemRequest itemRequest : request.getItems()) {
             OrderItem item = OrderItem.builder()
                     .productId(itemRequest.getProductId())
+                    .variantId(itemRequest.getVariantId())
+                    .comboId(itemRequest.getComboId())
                     .productName("Pending...") // Will be updated by Saga
                     .quantity(itemRequest.getQuantity())
                     .unitPrice(java.math.BigDecimal.ZERO)
@@ -102,12 +106,15 @@ public class OrderService {
                         .quantity(item.getQuantity())
                         .unitPrice(item.getUnitPrice())
                         .subtotal(item.getSubtotal())
+                        .variantId(item.getVariantId())
+                        .comboId(item.getComboId())
                         .build())
                 .collect(Collectors.toList());
 
         return OrderResponse.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
+                .employeeName(order.getEmployeeName())
                 .orderDate(order.getOrderDate())
                 .status(order.getStatus())
                 .totalAmount(order.getTotalAmount())

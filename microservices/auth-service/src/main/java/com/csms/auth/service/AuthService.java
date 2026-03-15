@@ -79,13 +79,23 @@ public class AuthService {
         Set<Role> roles = new HashSet<>();
         if (registerRequest.getRoles() == null || registerRequest.getRoles().isEmpty()) {
             Role userRole = roleRepository.findByName("ROLE_STAFF")
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseGet(() -> {
+                        Role newRole = new Role();
+                        newRole.setName("ROLE_STAFF");
+                        newRole.setDescription("Default Staff Role");
+                        return roleRepository.save(newRole);
+                    });
             roles.add(userRole);
         } else {
             registerRequest.getRoles().forEach(role -> {
                 String roleName = role.startsWith("ROLE_") ? role : "ROLE_" + role.toUpperCase();
                 Role r = roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Error: Role " + roleName + " is not found."));
+                        .orElseGet(() -> {
+                            Role newRole = new Role();
+                            newRole.setName(roleName);
+                            newRole.setDescription("Auto-created Role");
+                            return roleRepository.save(newRole);
+                        });
                 roles.add(r);
             });
         }

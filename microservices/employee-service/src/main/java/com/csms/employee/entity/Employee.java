@@ -38,4 +38,7 @@ public class Employee extends BaseEntity {
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String address;
+
+    @Column(precision = 15, scale = 2)
+    private java.math.BigDecimal baseSalary;
 }

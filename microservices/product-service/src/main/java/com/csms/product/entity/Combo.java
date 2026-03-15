@@ -29,6 +29,9 @@ public class Combo extends BaseEntity {
     @Builder.Default
     private String status = "AVAILABLE";
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ComboItem> items = new ArrayList<>();

@@ -53,4 +53,19 @@ public class SalaryController {
         salaryService.deleteSalary(id);
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/calculate")
+    public ResponseEntity<List<SalaryResponse>> calculateSalaries(@RequestParam int month, @RequestParam int year) {
+        return ResponseEntity.ok(salaryService.calculateMonthlySalaries(month, year));
+    }
+
+    @PatchMapping("/{id}/mark-paid")
+    public ResponseEntity<SalaryResponse> markPaid(@PathVariable Long id) {
+        return ResponseEntity.ok(salaryService.markAsPaid(id));
+    }
+
+    @PostMapping("/mark-paid-batch")
+    public ResponseEntity<Void> markBatchPaid(@RequestBody List<Long> ids) {
+        salaryService.markBatchAsPaid(ids);
+        return ResponseEntity.ok().build();
+    }
 }

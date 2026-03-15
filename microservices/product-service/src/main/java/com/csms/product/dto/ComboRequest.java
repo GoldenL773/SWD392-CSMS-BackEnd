@@ -19,6 +19,7 @@ public class ComboRequest {
     private String description;
     private BigDecimal price;
     private String status;
+    private String imageUrl;
     private List<ComboItemRequest> items;
 
     @Data

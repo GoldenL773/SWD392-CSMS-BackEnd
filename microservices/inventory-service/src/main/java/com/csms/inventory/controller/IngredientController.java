@@ -5,6 +5,8 @@ import com.csms.inventory.dto.IngredientResponse;
 import com.csms.inventory.service.IngredientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +21,18 @@ public class IngredientController {
     private final IngredientService ingredientService;
 
     @GetMapping
-    public ResponseEntity<List<IngredientResponse>> getAllIngredients() {
-        return ResponseEntity.ok(ingredientService.getAllIngredients());
+    public ResponseEntity<org.springframework.data.domain.Page<IngredientResponse>> getAllIngredients(
+            @RequestParam(required = false) String search,
+            org.springframework.data.domain.Pageable pageable) {
+        if (search != null && !search.trim().isEmpty()) {
+            return ResponseEntity.ok(ingredientService.searchIngredients(search, pageable));
+        }
+        return ResponseEntity.ok(ingredientService.getAllIngredients(pageable));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<IngredientResponse>> getAllIngredientsList() {
+        return ResponseEntity.ok(ingredientService.getAllIngredientsList());
     }
 
     @GetMapping("/{id}")

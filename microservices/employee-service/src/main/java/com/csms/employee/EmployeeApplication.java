@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableJpaAuditing
+@org.springframework.scheduling.annotation.EnableScheduling
 public class EmployeeApplication {
     public static void main(String[] args) {
         SpringApplication.run(EmployeeApplication.class, args);

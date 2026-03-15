@@ -29,7 +29,7 @@ public class RecipeController {
     }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<RecipeResponse> getRecipesByProductId(@PathVariable Long productId) {
+    public ResponseEntity<List<RecipeResponse>> getRecipesByProductId(@PathVariable Long productId) {
         return ResponseEntity.ok(recipeService.getRecipesByProductId(productId));
     }
 

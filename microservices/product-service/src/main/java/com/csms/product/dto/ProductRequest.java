@@ -31,7 +31,10 @@ public class ProductRequest {
     // Status from frontend (maps to available flag)
     private String status;
 
+    private String imageUrl;
+
     private java.util.List<VariantRequest> variants;
+    private java.util.List<IngredientRequest> ingredients;
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -41,6 +44,14 @@ public class ProductRequest {
         private String temperature;
         private BigDecimal price;
         private String sku;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class IngredientRequest {
+        private Long ingredientId;
+        private BigDecimal quantity;
+        private String unit;
     }
 }
 

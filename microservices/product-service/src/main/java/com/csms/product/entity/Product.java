@@ -35,6 +35,9 @@ public class Product extends BaseEntity {
     @Builder.Default
     private Boolean available = true;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<ProductVariant> variants;
 

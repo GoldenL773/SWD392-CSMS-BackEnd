@@ -83,10 +83,16 @@ public class AttendanceService {
         Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, today)
                 .orElse(new Attendance());
 
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         attendance.setEmployee(employee);
         attendance.setDate(today);
-        attendance.setCheckIn(java.time.LocalDateTime.now());
-        attendance.setStatus("PRESENT");
+        attendance.setCheckIn(now);
+        
+        if (now.toLocalTime().isAfter(java.time.LocalTime.of(8, 0))) {
+            attendance.setStatus("LATE");
+        } else {
+            attendance.setStatus("EARLY");
+        }
 
         return mapToResponse(attendanceRepository.save(attendance));
     }
@@ -108,6 +114,50 @@ public class AttendanceService {
             throw new ResourceNotFoundException("Attendance record not found with id: " + id);
         }
         attendanceRepository.deleteById(id);
+    }
+
+    /**
+     * Auto check-out at 5:00 PM for anyone who checked in but forgot to check out.
+     * Runs every day at 17:05 (5 minutes after 5 PM).
+     */
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 5 17 * * *")
+    @Transactional
+    public void autoCheckOut() {
+        LocalDate today = LocalDate.now();
+        List<Attendance> activeSessions = attendanceRepository.findByDate(today).stream()
+                .filter(a -> a.getCheckIn() != null && a.getCheckOut() == null)
+                .collect(Collectors.toList());
+
+        java.time.LocalDateTime fivePm = today.atTime(17, 0);
+        for (Attendance a : activeSessions) {
+            a.setCheckOut(fivePm);
+            attendanceRepository.save(a);
+        }
+    }
+
+    /**
+     * Mark absent for anyone who didn't show up.
+     * Runs every day at 23:55 (end of day).
+     */
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 55 23 * * *")
+    @Transactional
+    public void markAbsents() {
+        LocalDate today = LocalDate.now();
+        List<Employee> allEmployees = employeeRepository.findAll();
+        List<Attendance> todayAttendances = attendanceRepository.findByDate(today);
+        java.util.Set<Long> presentEmployeeIds = todayAttendances.stream()
+                .map(a -> a.getEmployee().getId())
+                .collect(Collectors.toSet());
+
+        for (Employee e : allEmployees) {
+            if (!presentEmployeeIds.contains(e.getId())) {
+                Attendance absent = new Attendance();
+                absent.setEmployee(e);
+                absent.setDate(today);
+                absent.setStatus("ABSENT");
+                attendanceRepository.save(absent);
+            }
+        }
     }
 
     private AttendanceResponse mapToResponse(Attendance attendance) {

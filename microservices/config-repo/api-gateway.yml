@@ -17,7 +17,12 @@ spring:
             - Path=/api/employees,/api/employees/**,/api/attendance,/api/attendance/**,/api/salaries,/api/salaries/**
           filters:
             - AuthenticationFilter
-        - id: product-service
+        - id: product-service-public
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/products,/api/products/**,/api/categories,/api/categories/**,/api/combos,/api/combos/**,/api/promotions,/api/promotions/**,/api/recipes,/api/recipes/**
+            - Method=GET
+        - id: product-service-private
           uri: lb://PRODUCT-SERVICE
           predicates:
             - Path=/api/products,/api/products/**,/api/categories,/api/categories/**,/api/combos,/api/combos/**,/api/promotions,/api/promotions/**,/api/recipes,/api/recipes/**

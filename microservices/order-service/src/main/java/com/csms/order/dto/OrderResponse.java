@@ -20,6 +20,7 @@ public class OrderResponse {
     private String status;
     private BigDecimal totalAmount;
     private String note;
+    private String employeeName;
     private List<OrderItemResponse> items;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

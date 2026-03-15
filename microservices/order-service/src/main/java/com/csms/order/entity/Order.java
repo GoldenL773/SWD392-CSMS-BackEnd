@@ -41,6 +41,7 @@ public class Order extends BaseEntity {
     private Long promotionId;
 
     @Column(precision = 12, scale = 2)
+    @Builder.Default
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
     @Column(length = 100)

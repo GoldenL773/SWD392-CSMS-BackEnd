@@ -17,6 +17,10 @@ public class SalaryRequest {
     @DecimalMin(value = "0.0", inclusive = true, message = "Amount must be zero or greater")
     private BigDecimal amount;
 
+    private BigDecimal baseSalary;
+    private BigDecimal bonus;
+    private BigDecimal deductions;
+
     @NotNull(message = "Payment date is required")
     private LocalDate paymentDate;
 

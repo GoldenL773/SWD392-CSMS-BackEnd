@@ -21,8 +21,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<com.csms.auth.entity.User> registerUser(@RequestBody com.csms.auth.dto.RegisterRequest registerRequest) {
-        return ResponseEntity.ok(authService.registerUser(registerRequest));
+    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody com.csms.auth.dto.RegisterRequest registerRequest) {
+        com.csms.auth.entity.User user = authService.registerUser(registerRequest);
+        return ResponseEntity.ok(Map.of(
+            "message", "User registered successfully",
+            "userId", user.getId(),
+            "username", user.getUsername()
+        ));
     }
 
     @GetMapping("/validate")

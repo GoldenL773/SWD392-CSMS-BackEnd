@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,10 +27,13 @@ public class OrderService {
     private final OrderSagaOrchestrator sagaOrchestrator;
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public org.springframework.data.domain.Page<OrderResponse> getAllOrders(
+            String status, LocalDateTime startDate, LocalDateTime endDate, org.springframework.data.domain.Pageable pageable) {
+        
+        String filterStatus = (status == null || status.equalsIgnoreCase("ALL")) ? null : status.toUpperCase();
+        
+        return orderRepository.findByFilters(filterStatus, startDate, endDate, pageable)
+                .map(this::mapToResponse);
     }
 
     @Transactional(readOnly = true)
@@ -39,32 +44,32 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public org.springframework.data.domain.Page<OrderResponse> getOrdersByUser(Long userId, org.springframework.data.domain.Pageable pageable) {
+        return orderRepository.findByUserId(userId, pageable)
+                .map(this::mapToResponse);
     }
 
     // Creating an order is not just saving to DB, it involves a saga to deduct inventory
     public OrderResponse createOrder(OrderRequest request) {
         Order order = Order.builder()
                 .userId(request.getUserId())
-                .orderDate(LocalDateTime.now())
-                .status("PENDING")
+                .orderDate(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime())
+                .status("PROCESSING")
                 .note(request.getNote())
                 .employeeName(request.getEmployeeName())
-                .promotionId(request.getPromotionId())
+                .totalAmount(request.getTotalAmount() != null ? request.getTotalAmount() : java.math.BigDecimal.ZERO)
                 .build();
 
         for (OrderItemRequest itemRequest : request.getItems()) {
+            java.math.BigDecimal unitPrice = itemRequest.getPrice() != null ? itemRequest.getPrice() : java.math.BigDecimal.ZERO;
             OrderItem item = OrderItem.builder()
                     .productId(itemRequest.getProductId())
                     .variantId(itemRequest.getVariantId())
                     .comboId(itemRequest.getComboId())
                     .productName("Pending...") // Will be updated by Saga
                     .quantity(itemRequest.getQuantity())
-                    .unitPrice(java.math.BigDecimal.ZERO)
-                    .subtotal(java.math.BigDecimal.ZERO)
+                    .unitPrice(unitPrice)
+                    .subtotal(unitPrice.multiply(java.math.BigDecimal.valueOf(itemRequest.getQuantity())))
                     .build();
             order.addItem(item);
         }

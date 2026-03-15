@@ -52,7 +52,8 @@ public class TransactionService {
             ingredient.setCurrentStock(currentStock.add(quantity));
         } else if (type.equals("EXPORT") || type.equals("WASTE") || type.equals("USAGE")) {
             if (currentStock.compareTo(quantity) < 0) {
-                throw new ValidationException("Not enough stock for ingredient: " + ingredient.getName());
+                throw new ValidationException("Not enough stock for ingredient: " + ingredient.getName() +
+                        " (Available: " + currentStock + ", Required: " + quantity + ")");
             }
             ingredient.setCurrentStock(currentStock.subtract(quantity));
         } else if (type.equals("ADJUSTMENT")) {

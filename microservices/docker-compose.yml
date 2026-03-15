@@ -207,9 +207,12 @@ services:
       - MSSQL_PID=Developer
     volumes:
     - ./init-scripts:/docker-entrypoint-initdb.d
+    - mssql-data:/var/opt/mssql
     networks:
       - csms-network
 
+volumes:
+  mssql-data:
 networks:
   csms-network:
     driver: bridge

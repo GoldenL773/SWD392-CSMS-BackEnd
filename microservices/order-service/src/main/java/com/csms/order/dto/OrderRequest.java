@@ -23,4 +23,5 @@ public class OrderRequest {
 
     private Long promotionId;
     private String employeeName;
+    private java.math.BigDecimal totalAmount;
 }

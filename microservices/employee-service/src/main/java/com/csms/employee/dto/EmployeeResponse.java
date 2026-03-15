@@ -21,6 +21,7 @@ public class EmployeeResponse {
     private LocalDate hireDate;
     private String phone;
     private String address;
+    private java.math.BigDecimal baseSalary;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -8,7 +8,6 @@ import java.time.LocalDate;
 
 @Data
 public class EmployeeRequest {
-    @NotNull(message = "User ID is required")
     private Long userId;
 
     @NotBlank(message = "First name is required")
@@ -26,4 +25,6 @@ public class EmployeeRequest {
     private String phone;
     
     private String address;
+    
+    private java.math.BigDecimal baseSalary;
 }

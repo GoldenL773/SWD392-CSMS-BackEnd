@@ -42,8 +42,19 @@ public class EmployeeService {
 
     @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
-        if (employeeRepository.existsByUserId(request.getUserId())) {
-            throw new ValidationException("Employee already exists for user ID: " + request.getUserId());
+        if (request.getUserId() != null) {
+            java.util.Optional<Employee> existing = employeeRepository.findByUserId(request.getUserId());
+            if (existing.isPresent()) {
+                Employee employee = existing.get();
+                if (request.getFirstName() != null && !request.getFirstName().isEmpty()) employee.setFirstName(request.getFirstName());
+                if (request.getLastName() != null && !request.getLastName().isEmpty()) employee.setLastName(request.getLastName());
+                if (request.getPosition() != null && !request.getPosition().isEmpty()) employee.setPosition(request.getPosition());
+                if (request.getHireDate() != null) employee.setHireDate(request.getHireDate());
+                if (request.getPhone() != null && !request.getPhone().isEmpty()) employee.setPhone(request.getPhone());
+                if (request.getAddress() != null && !request.getAddress().isEmpty()) employee.setAddress(request.getAddress());
+                if (request.getBaseSalary() != null) employee.setBaseSalary(request.getBaseSalary());
+                return mapToResponse(employeeRepository.save(employee));
+            }
         }
 
         Employee employee = Employee.builder()
@@ -54,6 +65,7 @@ public class EmployeeService {
                 .hireDate(request.getHireDate())
                 .phone(request.getPhone())
                 .address(request.getAddress())
+                .baseSalary(request.getBaseSalary())
                 .build();
 
         Employee savedEmployee = employeeRepository.save(employee);
@@ -76,6 +88,7 @@ public class EmployeeService {
         employee.setHireDate(request.getHireDate());
         employee.setPhone(request.getPhone());
         employee.setAddress(request.getAddress());
+        employee.setBaseSalary(request.getBaseSalary());
 
         Employee updatedEmployee = employeeRepository.save(employee);
         return mapToResponse(updatedEmployee);
@@ -99,6 +112,7 @@ public class EmployeeService {
                 .hireDate(employee.getHireDate())
                 .phone(employee.getPhone())
                 .address(employee.getAddress())
+                .baseSalary(employee.getBaseSalary())
                 .createdAt(employee.getCreatedAt())
                 .updatedAt(employee.getUpdatedAt())
                 .build();

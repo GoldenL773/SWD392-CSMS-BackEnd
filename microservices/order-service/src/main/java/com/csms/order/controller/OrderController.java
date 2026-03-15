@@ -20,8 +20,12 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
+    public ResponseEntity<org.springframework.data.domain.Page<OrderResponse>> getAllOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate,
+            org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(orderService.getAllOrders(status, startDate, endDate, pageable));
     }
 
     @GetMapping("/{id}")
@@ -30,8 +34,10 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<OrderResponse>> getOrdersByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
+    public ResponseEntity<org.springframework.data.domain.Page<OrderResponse>> getOrdersByUser(
+            @PathVariable Long userId,
+            org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(orderService.getOrdersByUser(userId, pageable));
     }
 
     @PostMapping

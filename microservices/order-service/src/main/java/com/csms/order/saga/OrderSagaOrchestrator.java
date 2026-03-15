@@ -84,33 +84,45 @@ public class OrderSagaOrchestrator {
             BigDecimal totalDiscount = BigDecimal.ZERO;
             if (order.getPromotionId() != null) {
                 PromotionResponse promotion = productClient.getPromotionById(order.getPromotionId());
-                log.info("Applying promotion: {} (ApplyTo: {}, TargetID: {})", promotion.getName(), promotion.getApplyTo(), promotion.getTargetId());
-                
-                for (OrderItem item : order.getItems()) {
-                    boolean isMatch = false;
-                    if ("PRODUCT".equalsIgnoreCase(promotion.getApplyTo()) && item.getProductId() != null && item.getProductId().equals(promotion.getTargetId())) {
-                        isMatch = true;
-                    } else if ("COMBO".equalsIgnoreCase(promotion.getApplyTo()) && item.getComboId() != null && item.getComboId().equals(promotion.getTargetId())) {
-                        isMatch = true;
-                    } else if ("CATEGORY".equalsIgnoreCase(promotion.getApplyTo()) && item.getProductId() != null) {
-                        // Check if product's category matches the targetId
-                        ProductResponse product = productClient.getProductById(item.getProductId());
-                        if (product.getCategoryId() != null && product.getCategoryId().equals(promotion.getTargetId())) {
-                            isMatch = true;
-                        }
-                    }
-
-                    if (isMatch) {
-                        BigDecimal itemDiscount = BigDecimal.ZERO;
+                if (promotion == null || promotion.getApplyTo() == null) {
+                    log.warn("Promotion {} not found or incomplete. Skipping.", order.getPromotionId());
+                } else {
+                    log.info("Applying promotion: {} (ApplyTo: {}, TargetID: {})", promotion.getName(), promotion.getApplyTo(), promotion.getTargetId());
+                    
+                    String applyTo = promotion.getApplyTo().toUpperCase();
+                    
+                    if ("ALL".equals(applyTo) || "ORDER".equals(applyTo)) {
                         if ("PERCENTAGE".equals(promotion.getDiscountType())) {
-                            itemDiscount = item.getSubtotal().multiply(promotion.getDiscountValue()).divide(BigDecimal.valueOf(100));
+                            totalDiscount = totalAmount.multiply(promotion.getDiscountValue()).divide(BigDecimal.valueOf(100));
                         } else {
-                            // FIXED discount - applies once to the subtotal of the matching item (or per unit? Usually once per matching entry in this logic)
-                            itemDiscount = promotion.getDiscountValue();
+                            totalDiscount = promotion.getDiscountValue();
                         }
-                        totalDiscount = totalDiscount.add(itemDiscount);
-                        log.info("Matching item found: {}. Applied discount: {}", item.getProductName(), itemDiscount);
+                    } else {
+                        for (OrderItem item : order.getItems()) {
+                            boolean isMatch = false;
+                            if ("PRODUCT".equals(applyTo) && item.getProductId() != null && item.getProductId().equals(promotion.getTargetId())) {
+                                isMatch = true;
+                            } else if ("COMBO".equals(applyTo) && item.getComboId() != null && item.getComboId().equals(promotion.getTargetId())) {
+                                isMatch = true;
+                            }
+
+                            if (isMatch) {
+                                BigDecimal itemDiscount = BigDecimal.ZERO;
+                                if ("PERCENTAGE".equals(promotion.getDiscountType())) {
+                                    itemDiscount = item.getSubtotal().multiply(promotion.getDiscountValue()).divide(BigDecimal.valueOf(100));
+                                } else {
+                                    itemDiscount = promotion.getDiscountValue();
+                                }
+                                totalDiscount = totalDiscount.add(itemDiscount);
+                                log.info("Matching item found: {}. Applied discount: {}", item.getProductName(), itemDiscount);
+                            }
+                        }
                     }
+                }
+                
+                // Cap discount at total amount
+                if (totalDiscount.compareTo(totalAmount) > 0) {
+                    totalDiscount = totalAmount;
                 }
             }
             order.setDiscountAmount(totalDiscount);
@@ -128,8 +140,8 @@ public class OrderSagaOrchestrator {
                 }
             }
             
-            // Step 3: Confirm Order
-            order.setStatus("CONFIRMED");
+            // Step 3: Confirm Order - Set status to PROCESSING
+            order.setStatus("PROCESSING");
             orderRepository.save(order);
             log.info("Saga completed successfully for order: {}", order.getId());
             
@@ -196,25 +208,36 @@ public class OrderSagaOrchestrator {
         if ("CONFIRMED".equals(order.getStatus())) {
             // Need to refund inventory
             for (OrderItem item : order.getItems()) {
-                List<ProductIngredientResponse> ingredients = inventoryClient.getIngredientsByProductId(item.getProductId());
-                
-                for (ProductIngredientResponse ingredient : ingredients) {
-                    BigDecimal totalQtyToRefund = ingredient.getQuantity().multiply(new BigDecimal(item.getQuantity()));
-                    
-                    InventoryTransactionRequest revertRequest = InventoryTransactionRequest.builder()
-                            .ingredientId(ingredient.getIngredientId())
-                            .transactionType("IMPORT") // Refund back to stock
-                            .quantity(totalQtyToRefund)
-                            .transactionDate(LocalDateTime.now())
-                            .note("Refund for cancelled Order " + order.getId())
-                            .build();
-                    
-                    inventoryClient.recordTransaction(revertRequest);
+                if (item.getComboId() != null) {
+                    ComboResponse combo = productClient.getComboById(item.getComboId());
+                    for (ComboResponse.ComboItemResponse comboItem : combo.getItems()) {
+                        refundIngredients(order, comboItem.getProductId(), comboItem.getQuantity() * item.getQuantity(), item.getProductName());
+                    }
+                } else if (item.getProductId() != null) {
+                    refundIngredients(order, item.getProductId(), item.getQuantity(), item.getProductName());
                 }
             }
         }
         
         order.setStatus("CANCELLED");
         orderRepository.save(order);
+    }
+
+    private void refundIngredients(Order order, Long productId, int quantity, String displayName) {
+        List<ProductIngredientResponse> ingredients = inventoryClient.getIngredientsByProductId(productId);
+        
+        for (ProductIngredientResponse ingredient : ingredients) {
+            BigDecimal totalQtyToRefund = ingredient.getQuantity().multiply(new BigDecimal(quantity));
+            
+            InventoryTransactionRequest revertRequest = InventoryTransactionRequest.builder()
+                    .ingredientId(ingredient.getIngredientId())
+                    .transactionType("IMPORT") // Refund back to stock
+                    .quantity(totalQtyToRefund)
+                    .transactionDate(LocalDateTime.now())
+                    .note("Refund for cancelled Order " + order.getId() + " - " + displayName)
+                    .build();
+            
+            inventoryClient.recordTransaction(revertRequest);
+        }
     }
 }

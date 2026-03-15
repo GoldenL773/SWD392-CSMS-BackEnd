@@ -23,8 +23,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.csms.auth.client.EmployeeClient;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -32,6 +36,7 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final JwtTokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final EmployeeClient employeeClient;
 
     public AuthResponse authenticateUser(AuthRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -101,6 +106,23 @@ public class AuthService {
         }
 
         user.setRoles(roles);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Task 9: Create default employee record
+        try {
+            EmployeeClient.EmployeeRegistrationRequest employeeRequest = EmployeeClient.EmployeeRegistrationRequest.builder()
+                    .userId(savedUser.getId())
+                    .firstName("") 
+                    .lastName("")  
+                    .position("STAFF") 
+                    .hireDate(java.time.LocalDate.now())
+                    .build();
+            employeeClient.createEmployee(employeeRequest);
+            log.info("Automatically created employee record for user: {}", savedUser.getUsername());
+        } catch (Exception e) {
+            log.error("Failed to create default employee record for user: {}. Error: {}", savedUser.getUsername(), e.getMessage());
+        }
+
+        return savedUser;
     }
 }

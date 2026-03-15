@@ -18,6 +18,9 @@ public class SalaryResponse {
     private Long employeeId;
     private String employeeName;
     private BigDecimal amount;
+    private BigDecimal baseSalary;
+    private BigDecimal bonus;
+    private BigDecimal deductions;
     private LocalDate paymentDate;
     private LocalDate periodStart;
     private LocalDate periodEnd;

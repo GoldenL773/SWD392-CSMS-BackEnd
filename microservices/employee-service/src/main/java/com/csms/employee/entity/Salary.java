@@ -26,6 +26,15 @@ public class Salary extends BaseEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    @Column(precision = 12, scale = 2)
+    private BigDecimal baseSalary;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal bonus;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal deductions;
+
     @Column(nullable = false)
     private LocalDate paymentDate;
 

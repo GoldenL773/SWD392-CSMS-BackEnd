@@ -58,6 +58,9 @@ public class SalaryService {
         Salary salary = Salary.builder()
                 .employee(employee)
                 .amount(request.getAmount())
+                .baseSalary(request.getBaseSalary())
+                .bonus(request.getBonus())
+                .deductions(request.getDeductions())
                 .paymentDate(request.getPaymentDate())
                 .periodStart(request.getPeriodStart())
                 .periodEnd(request.getPeriodEnd())
@@ -78,6 +81,9 @@ public class SalaryService {
 
         salary.setEmployee(employee);
         salary.setAmount(request.getAmount());
+        salary.setBaseSalary(request.getBaseSalary());
+        salary.setBonus(request.getBonus());
+        salary.setDeductions(request.getDeductions());
         salary.setPaymentDate(request.getPaymentDate());
         salary.setPeriodStart(request.getPeriodStart());
         salary.setPeriodEnd(request.getPeriodEnd());
@@ -114,6 +120,9 @@ public class SalaryService {
             Salary salary = Salary.builder()
                     .employee(emp)
                     .amount(base)
+                    .baseSalary(base)
+                    .bonus(java.math.BigDecimal.ZERO)
+                    .deductions(java.math.BigDecimal.ZERO)
                     .periodStart(start)
                     .periodEnd(end)
                     .paymentDate(LocalDate.now().plusDays(5)) // Default payment date
@@ -152,6 +161,9 @@ public class SalaryService {
                 .employeeId(salary.getEmployee().getId())
                 .employeeName(salary.getEmployee().getFirstName() + " " + salary.getEmployee().getLastName())
                 .amount(salary.getAmount())
+                .baseSalary(salary.getBaseSalary() != null ? salary.getBaseSalary() : salary.getAmount())
+                .bonus(salary.getBonus() != null ? salary.getBonus() : java.math.BigDecimal.ZERO)
+                .deductions(salary.getDeductions() != null ? salary.getDeductions() : java.math.BigDecimal.ZERO)
                 .paymentDate(salary.getPaymentDate())
                 .periodStart(salary.getPeriodStart())
                 .periodEnd(salary.getPeriodEnd())

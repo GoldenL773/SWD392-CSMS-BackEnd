@@ -1,12 +1,12 @@
-CREATE DATABASE csms_auth;
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'csms_auth') CREATE DATABASE csms_auth;
 GO
-CREATE DATABASE csms_employee;
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'csms_employee') CREATE DATABASE csms_employee;
 GO
-CREATE DATABASE csms_inventory;
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'csms_inventory') CREATE DATABASE csms_inventory;
 GO
-CREATE DATABASE csms_order;
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'csms_order') CREATE DATABASE csms_order;
 GO
-CREATE DATABASE csms_product;
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'csms_product') CREATE DATABASE csms_product;
 GO
-CREATE DATABASE csms_report;
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'csms_report') CREATE DATABASE csms_report;
 GO

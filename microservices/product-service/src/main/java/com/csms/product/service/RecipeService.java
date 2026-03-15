@@ -62,6 +62,13 @@ public class RecipeService {
             throw new ResourceNotFoundException("Product not found with id: " + request.getProductId());
         }
 
+        // Check for existing recipe to avoid duplicate productId error
+        java.util.Optional<Recipe> existingRecipe = recipeRepository.findByProductId(request.getProductId()).stream().findFirst();
+        if (existingRecipe.isPresent()) {
+            log.info("Recipe already exists for product {}, redirecting to update.", request.getProductId());
+            return updateRecipe(existingRecipe.get().getId(), request);
+        }
+
         Recipe recipe = Recipe.builder()
                 .productId(request.getProductId())
                 .instructions(request.getInstructions())

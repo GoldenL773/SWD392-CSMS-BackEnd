@@ -79,16 +79,21 @@ public class AttendanceService {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
 
-        LocalDate targetDate = date != null ? date : LocalDate.now();
+        // Xác định ngày điểm danh (ưu tiên ngày từ client gửi lên, nếu không lấy ngày hiện tại ở VN)
+        LocalDate targetDate = date != null ? date : LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, targetDate)
                 .orElse(new Attendance());
 
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        // Lấy giờ hiện tại (UTC) để lưu vào DB
+        java.time.LocalDateTime nowUtc = java.time.LocalDateTime.now(java.time.Clock.systemUTC());
+        
         attendance.setEmployee(employee);
         attendance.setDate(targetDate);
-        attendance.setCheckIn(now);
+        attendance.setCheckIn(nowUtc);
 
-        if (now.toLocalTime().isAfter(java.time.LocalTime.of(8, 0))) {
+        // Kiểm tra đi muộn dựa trên giờ Việt Nam
+        java.time.LocalTime nowHcm = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        if (nowHcm.isAfter(java.time.LocalTime.of(8, 0))) {
             attendance.setStatus("LATE");
         } else {
             attendance.setStatus("EARLY");
@@ -99,11 +104,12 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceResponse checkOut(Long employeeId, LocalDate date) {
-        LocalDate targetDate = date != null ? date : LocalDate.now();
+        LocalDate targetDate = date != null ? date : LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         Attendance attendance = attendanceRepository.findByEmployeeIdAndDate(employeeId, targetDate)
                 .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found for this date. Please check in first."));
 
-        attendance.setCheckOut(java.time.LocalDateTime.now());
+        // Lưu giờ check-out (UTC)
+        attendance.setCheckOut(java.time.LocalDateTime.now(java.time.Clock.systemUTC()));
 
         return mapToResponse(attendanceRepository.save(attendance));
     }
@@ -161,13 +167,36 @@ public class AttendanceService {
     }
 
     private AttendanceResponse mapToResponse(Attendance attendance) {
+        java.time.ZoneId targetZone = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+        java.time.ZoneOffset dbOffset = java.time.ZoneOffset.UTC;
+
+        java.time.LocalDateTime rawCheckIn = attendance.getCheckIn();
+        java.time.LocalDateTime rawCheckOut = attendance.getCheckOut();
+
+        java.time.LocalDateTime localizedCheckIn = null;
+        java.time.LocalDateTime localizedCheckOut = null;
+
+        if (rawCheckIn != null) {
+            localizedCheckIn = rawCheckIn
+                    .atOffset(dbOffset)
+                    .atZoneSameInstant(targetZone)
+                    .toLocalDateTime();
+        }
+
+        if (rawCheckOut != null) {
+            localizedCheckOut = rawCheckOut
+                    .atOffset(dbOffset)
+                    .atZoneSameInstant(targetZone)
+                    .toLocalDateTime();
+        }
+
         return AttendanceResponse.builder()
                 .id(attendance.getId())
                 .employeeId(attendance.getEmployee().getId())
                 .employeeName(attendance.getEmployee().getFirstName() + " " + attendance.getEmployee().getLastName())
                 .date(attendance.getDate())
-                .checkIn(attendance.getCheckIn())
-                .checkOut(attendance.getCheckOut())
+                .checkIn(localizedCheckIn)
+                .checkOut(localizedCheckOut)
                 .status(attendance.getStatus())
                 .build();
     }

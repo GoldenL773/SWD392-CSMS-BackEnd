@@ -26,17 +26,7 @@ public class ProductController {
             @RequestParam(required = false) String search,
             org.springframework.data.domain.Pageable pageable) {
         
-        if (search != null && !search.trim().isEmpty()) {
-            return ResponseEntity.ok(productService.searchProducts(search, pageable));
-        } else if (categoryId != null) {
-            return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
-        } else if (category != null && !category.trim().isEmpty()) {
-            return ResponseEntity.ok(productService.getProductsByCategoryName(category, pageable));
-        } else if (available != null && available) {
-            return ResponseEntity.ok(productService.getAvailableProducts(pageable));
-        }
-        
-        return ResponseEntity.ok(productService.getAllProducts(pageable));
+        return ResponseEntity.ok(productService.getAllProducts(categoryId, category, available, search, pageable));
     }
 
     @GetMapping("/{id}")

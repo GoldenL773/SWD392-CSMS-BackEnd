@@ -41,4 +41,8 @@ public class Employee extends BaseEntity {
 
     @Column(precision = 15, scale = 2)
     private java.math.BigDecimal baseSalary;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private java.util.List<Salary> salaries = new java.util.ArrayList<>();
 }

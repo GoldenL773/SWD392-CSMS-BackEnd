@@ -25,11 +25,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody com.csms.auth.dto.RegisterRequest registerRequest) {
         com.csms.auth.entity.User user = authService.registerUser(registerRequest);
-        return ResponseEntity.ok(Map.of(
-            "message", "User registered successfully",
-            "userId", user.getId(),
-            "username", user.getUsername()
-        ));
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("message", "User registered successfully");
+        response.put("userId", user.getId());
+        response.put("username", user.getUsername());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/validate")

@@ -28,11 +28,11 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<OrderResponse> getAllOrders(
-            String status, LocalDateTime startDate, LocalDateTime endDate, org.springframework.data.domain.Pageable pageable) {
+            String status, Long userId, LocalDateTime startDate, LocalDateTime endDate, org.springframework.data.domain.Pageable pageable) {
         
         String filterStatus = (status == null || status.equalsIgnoreCase("ALL")) ? null : status.toUpperCase();
         
-        return orderRepository.findByFilters(filterStatus, startDate, endDate, pageable)
+        return orderRepository.findByFilters(filterStatus, userId, startDate, endDate, pageable)
                 .map(this::mapToResponse);
     }
 

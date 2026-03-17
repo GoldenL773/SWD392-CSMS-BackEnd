@@ -46,24 +46,28 @@ public class ReportFileController {
             reportFileRepository.save(reportFile);
             
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "File uploaded successfully"));
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to upload file"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to upload file: " + e.getMessage()));
         }
     }
 
     @GetMapping("/files")
     public ResponseEntity<List<Map<String, Object>>> getUploadedReports() {
         List<Map<String, Object>> files = reportFileRepository.findAll().stream()
-                .map(rf -> Map.of(
-                        "id", rf.getId(),
-                        "fileName", rf.getFileName(),
-                        "fileType", rf.getFileType() != null ? rf.getFileType() : "application/octet-stream",
-                        "title", rf.getTitle(),
-                        "description", rf.getDescription() != null ? rf.getDescription() : "",
-                        "reportType", rf.getReportType(),
-                        "reportPeriod", rf.getReportPeriod(),
-                        "uploadedAt", rf.getUploadedAt().toString()
-                ))
+                .map(rf -> {
+                    Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", rf.getId());
+                    map.put("fileName", rf.getFileName());
+                    map.put("fileType", rf.getFileType() != null ? rf.getFileType() : "application/octet-stream");
+                    map.put("title", rf.getTitle() != null ? rf.getTitle() : rf.getFileName());
+                    map.put("description", rf.getDescription() != null ? rf.getDescription() : "");
+                    map.put("reportType", rf.getReportType());
+                    map.put("reportPeriod", rf.getReportPeriod());
+                    map.put("fileSize", rf.getFileData() != null ? rf.getFileData().length : 0);
+                    map.put("uploadedAt", rf.getUploadedAt() != null ? rf.getUploadedAt().toString() : java.time.LocalDateTime.now().toString());
+                    return map;
+                })
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(files);

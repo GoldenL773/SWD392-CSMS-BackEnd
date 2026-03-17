@@ -41,7 +41,7 @@ public class ReportService {
         // Today's Orders & Revenue
         List<OrderResponse> todayOrders = allOrders.stream()
                 .filter(o -> o.getOrderDate().toLocalDate().isEqual(today))
-                .filter(o -> !"CANCELLED".equals(o.getStatus()))
+                .filter(o -> "COMPLETED".equals(o.getStatus()))
                 .collect(Collectors.toList());
 
         BigDecimal todayRevenue = todayOrders.stream()
@@ -62,7 +62,7 @@ public class ReportService {
 
         // Total Revenue for profit calculation
         BigDecimal overallRevenue = allOrders.stream()
-                .filter(o -> !"CANCELLED".equals(o.getStatus()))
+                .filter(o -> "COMPLETED".equals(o.getStatus()))
                 .map(OrderResponse::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -74,7 +74,7 @@ public class ReportService {
             LocalDate d = today.minusDays(i);
             BigDecimal dailyRev = allOrders.stream()
                     .filter(o -> o.getOrderDate().toLocalDate().isEqual(d))
-                    .filter(o -> !"CANCELLED".equals(o.getStatus()))
+                    .filter(o -> "COMPLETED".equals(o.getStatus()))
                     .map(OrderResponse::getTotalAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             last7Days.put(d.toString(), dailyRev);

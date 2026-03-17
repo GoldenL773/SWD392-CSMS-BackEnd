@@ -13,10 +13,12 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT o FROM Order o WHERE " +
             "(:status IS NULL OR o.status = :status) AND " +
+            "(:userId IS NULL OR o.userId = :userId) AND " +
             "(:startDate IS NULL OR o.orderDate >= :startDate) AND " +
             "(:endDate IS NULL OR o.orderDate <= :endDate)")
     Page<Order> findByFilters(
             @org.springframework.data.repository.query.Param("status") String status,
+            @org.springframework.data.repository.query.Param("userId") Long userId,
             @org.springframework.data.repository.query.Param("startDate") LocalDateTime startDate,
             @org.springframework.data.repository.query.Param("endDate") LocalDateTime endDate,
             Pageable pageable);

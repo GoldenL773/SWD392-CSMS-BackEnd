@@ -21,7 +21,7 @@ public class ReportFile {
     private String fileName;
     private String fileType;
 
-    @Lob
+    @Column(columnDefinition = "VARBINARY(MAX)")
     private byte[] fileData;
 
     private String title;

@@ -29,9 +29,10 @@ public class ProductService {
     private final com.csms.product.client.InventoryClient inventoryClient;
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<ProductResponse> getAllProducts(org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<ProductResponse> getAllProducts(
+            Long categoryId, String categoryName, Boolean available, String search, org.springframework.data.domain.Pageable pageable) {
         java.util.Map<Long, com.csms.product.dto.IngredientResponse> ingredientData = fetchIngredientData();
-        return productRepository.findAll(pageable)
+        return productRepository.findByFilters(categoryId, categoryName, available, search, pageable)
                 .map(p -> mapToResponse(p, ingredientData));
     }
 

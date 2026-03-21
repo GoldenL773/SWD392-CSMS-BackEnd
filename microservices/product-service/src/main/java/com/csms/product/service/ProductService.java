@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -107,6 +108,7 @@ public class ProductService {
 
         // Handle Ingredients (Create/Update Recipe)
         if (request.getIngredients() != null && !request.getIngredients().isEmpty()) {
+            List<ProductRequest.IngredientRequest> normalizedIngredients = normalizeIngredients(request.getIngredients());
             com.csms.product.entity.Recipe recipe = com.csms.product.entity.Recipe.builder()
                     .productId(savedProduct.getId())
                     .instructions("Standard preparation")
@@ -115,7 +117,7 @@ public class ProductService {
             
             com.csms.product.entity.Recipe savedRecipe = recipeRepository.save(recipe);
             
-            java.util.List<com.csms.product.entity.RecipeIngredient> recipeIngredients = request.getIngredients().stream()
+            java.util.List<com.csms.product.entity.RecipeIngredient> recipeIngredients = normalizedIngredients.stream()
                     .map(i -> com.csms.product.entity.RecipeIngredient.builder()
                             .recipe(savedRecipe)
                             .ingredientId(i.getIngredientId())
@@ -175,6 +177,7 @@ public class ProductService {
 
         // Update Ingredients
         if (request.getIngredients() != null) {
+            List<ProductRequest.IngredientRequest> normalizedIngredients = normalizeIngredients(request.getIngredients());
             com.csms.product.entity.Recipe recipe = recipeRepository.findByProductId(id)
                     .orElseGet(() -> com.csms.product.entity.Recipe.builder()
                             .productId(id)
@@ -188,7 +191,7 @@ public class ProductService {
                 recipe.getIngredients().clear();
             }
             
-            for (com.csms.product.dto.ProductRequest.IngredientRequest i : request.getIngredients()) {
+            for (com.csms.product.dto.ProductRequest.IngredientRequest i : normalizedIngredients) {
                 if (i.getIngredientId() != null && i.getQuantity() != null) {
                     com.csms.product.entity.RecipeIngredient ri = com.csms.product.entity.RecipeIngredient.builder()
                             .recipe(recipe)
@@ -239,6 +242,35 @@ public class ProductService {
             return !"UNAVAILABLE".equalsIgnoreCase(request.getStatus());
         }
         return request.getAvailable() != null ? request.getAvailable() : true;
+    }
+
+    private List<ProductRequest.IngredientRequest> normalizeIngredients(List<ProductRequest.IngredientRequest> ingredients) {
+        LinkedHashMap<Long, ProductRequest.IngredientRequest> merged = new LinkedHashMap<>();
+
+        for (ProductRequest.IngredientRequest item : ingredients) {
+            if (item == null || item.getIngredientId() == null) {
+                continue;
+            }
+            if (item.getQuantity() == null || item.getQuantity().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            ProductRequest.IngredientRequest existing = merged.get(item.getIngredientId());
+            if (existing == null) {
+                ProductRequest.IngredientRequest copy = new ProductRequest.IngredientRequest();
+                copy.setIngredientId(item.getIngredientId());
+                copy.setQuantity(item.getQuantity());
+                copy.setUnit(item.getUnit());
+                merged.put(item.getIngredientId(), copy);
+            } else {
+                existing.setQuantity(existing.getQuantity().add(item.getQuantity()));
+                if ((existing.getUnit() == null || existing.getUnit().isBlank()) && item.getUnit() != null && !item.getUnit().isBlank()) {
+                    existing.setUnit(item.getUnit());
+                }
+            }
+        }
+
+        return new java.util.ArrayList<>(merged.values());
     }
 
     private java.util.Map<Long, com.csms.product.dto.IngredientResponse> fetchIngredientData() {

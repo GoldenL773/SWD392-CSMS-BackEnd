@@ -5,6 +5,7 @@ import com.csms.product.dto.RecipeResponse;
 import com.csms.product.entity.Recipe;
 import com.csms.product.entity.RecipeIngredient;
 import com.csms.product.exception.ResourceNotFoundException;
+import com.csms.product.exception.ValidationException;
 import com.csms.product.repository.ProductRepository;
 import com.csms.product.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,7 +77,8 @@ public class RecipeService {
                 .prepTime(request.getPrepTime())
                 .build();
 
-        List<RecipeIngredient> ingredients = request.getIngredients().stream()
+        List<RecipeRequest.IngredientRequest> normalizedIngredients = normalizeIngredients(request.getIngredients());
+        List<RecipeIngredient> ingredients = normalizedIngredients.stream()
                 .map(ingReq -> RecipeIngredient.builder()
                         .recipe(recipe)
                         .ingredientId(ingReq.getIngredientId())
@@ -99,7 +102,8 @@ public class RecipeService {
 
         // Update ingredients
         recipe.getIngredients().clear();
-        List<RecipeIngredient> newIngredients = request.getIngredients().stream()
+        List<RecipeRequest.IngredientRequest> normalizedIngredients = normalizeIngredients(request.getIngredients());
+        List<RecipeIngredient> newIngredients = normalizedIngredients.stream()
                 .map(ingReq -> RecipeIngredient.builder()
                         .recipe(recipe)
                         .ingredientId(ingReq.getIngredientId())
@@ -110,6 +114,42 @@ public class RecipeService {
         recipe.getIngredients().addAll(newIngredients);
 
         return mapToResponse(recipeRepository.save(recipe), fetchIngredientData());
+    }
+
+    private List<RecipeRequest.IngredientRequest> normalizeIngredients(List<RecipeRequest.IngredientRequest> ingredients) {
+        if (ingredients == null || ingredients.isEmpty()) {
+            throw new ValidationException("At least one ingredient is required");
+        }
+
+        LinkedHashMap<Long, RecipeRequest.IngredientRequest> merged = new LinkedHashMap<>();
+        for (RecipeRequest.IngredientRequest item : ingredients) {
+            if (item == null || item.getIngredientId() == null) {
+                continue;
+            }
+            if (item.getQuantity() == null || item.getQuantity().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            RecipeRequest.IngredientRequest existing = merged.get(item.getIngredientId());
+            if (existing == null) {
+                RecipeRequest.IngredientRequest copy = new RecipeRequest.IngredientRequest();
+                copy.setIngredientId(item.getIngredientId());
+                copy.setQuantity(item.getQuantity());
+                copy.setUnit(item.getUnit());
+                merged.put(item.getIngredientId(), copy);
+            } else {
+                existing.setQuantity(existing.getQuantity().add(item.getQuantity()));
+                if ((existing.getUnit() == null || existing.getUnit().isBlank()) && item.getUnit() != null && !item.getUnit().isBlank()) {
+                    existing.setUnit(item.getUnit());
+                }
+            }
+        }
+
+        if (merged.isEmpty()) {
+            throw new ValidationException("At least one valid ingredient is required");
+        }
+
+        return new ArrayList<>(merged.values());
     }
 
     @Transactional

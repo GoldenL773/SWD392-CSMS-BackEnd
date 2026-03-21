@@ -110,25 +110,39 @@ public class SalaryService {
         List<Salary> generatedSalaries = new java.util.ArrayList<>();
         
         for (Employee emp : employees) {
-            // Check if salary already exists for this period
-            // (Simplification: just create/update)
-            
-            // Calculate based on attendance
-            // For now, simple: amount = baseSalary (if exists) or default
             java.math.BigDecimal base = emp.getBaseSalary() != null ? emp.getBaseSalary() : new java.math.BigDecimal("5000000");
-            
-            Salary salary = Salary.builder()
-                    .employee(emp)
-                    .amount(base)
-                    .baseSalary(base)
-                    .bonus(java.math.BigDecimal.ZERO)
-                    .deductions(java.math.BigDecimal.ZERO)
-                    .periodStart(start)
-                    .periodEnd(end)
-                    .paymentDate(LocalDate.now().plusDays(5)) // Default payment date
-                    .status("PENDING")
-                    .build();
-            
+            List<Salary> existingForPeriod = salaryRepository.findByEmployeeIdAndPeriodStartAndPeriodEnd(emp.getId(), start, end);
+            Salary latestExisting = existingForPeriod.stream()
+                    .max(java.util.Comparator.comparing(Salary::getId))
+                    .orElse(null);
+
+            Salary salary = latestExisting;
+            if (salary != null) {
+                // Keep PAID records unchanged to avoid resetting payment status.
+                if (!"PAID".equalsIgnoreCase(salary.getStatus())) {
+                    java.math.BigDecimal bonus = salary.getBonus() != null ? salary.getBonus() : java.math.BigDecimal.ZERO;
+                    java.math.BigDecimal ded = salary.getDeductions() != null ? salary.getDeductions() : java.math.BigDecimal.ZERO;
+                    salary.setBaseSalary(base);
+                    salary.setAmount(base.add(bonus).subtract(ded));
+                    salary.setStatus("PENDING");
+                    if (salary.getPaymentDate() == null) {
+                        salary.setPaymentDate(LocalDate.now().plusDays(5));
+                    }
+                }
+            } else {
+                salary = Salary.builder()
+                        .employee(emp)
+                        .amount(base)
+                        .baseSalary(base)
+                        .bonus(java.math.BigDecimal.ZERO)
+                        .deductions(java.math.BigDecimal.ZERO)
+                        .periodStart(start)
+                        .periodEnd(end)
+                        .paymentDate(LocalDate.now().plusDays(5))
+                        .status("PENDING")
+                        .build();
+            }
+
             generatedSalaries.add(salaryRepository.save(salary));
         }
         

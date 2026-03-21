@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +25,15 @@ public class OrderController {
     public ResponseEntity<org.springframework.data.domain.Page<OrderResponse>> getAllOrders(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME, fallbackPatterns = {"yyyy-MM-dd"}) java.time.LocalDateTime startDate,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME, fallbackPatterns = {"yyyy-MM-dd"}) java.time.LocalDateTime endDate,
+            // Backward-compatible alias used by finance modal
+            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             org.springframework.data.domain.Pageable pageable) {
-        return ResponseEntity.ok(orderService.getAllOrders(status, userId, startDate, endDate, pageable));
+        Long effectiveUserId = userId != null ? userId : employeeId;
+        LocalDateTime parsedStartDate = parseDateTimeParam(startDate, true);
+        LocalDateTime parsedEndDate = parseDateTimeParam(endDate, false);
+        return ResponseEntity.ok(orderService.getAllOrders(status, effectiveUserId, parsedStartDate, parsedEndDate, pageable));
     }
 
     @GetMapping("/{id}")
@@ -62,5 +69,17 @@ public class OrderController {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.cancelOrder(id));
+    }
+
+    private LocalDateTime parseDateTimeParam(String value, boolean isStart) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(value);
+        } catch (Exception ignored) {
+            LocalDate date = LocalDate.parse(value);
+            return isStart ? date.atStartOfDay() : date.atTime(23, 59, 59);
+        }
     }
 }
